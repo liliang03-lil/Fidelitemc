@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>FidèleMC</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--gold:#C9A96E;--gold-light:#E8D5A3;--gold-dark:#8B6914;--navy:#0A1628;--navy-mid:#1A2E4A;--white:#FAFAF7;--gray:#8A9BB0;--success:#2ECC8A;--danger:#E85555;}
@@ -86,6 +87,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .email-preview-header{font-size:11px;color:var(--gray);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06)}
 .qr-wrap{text-align:center;padding:16px 0}
 .qr-box{display:inline-block;background:#fff;padding:16px;border-radius:16px;margin-bottom:14px}
+.qr-box img{display:block}
 .qr-instructions{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px}
 .qr-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
 .qr-step:last-child{margin-bottom:0}
@@ -109,6 +111,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .mini-field label{font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px}
 .mini-field input{width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none}
 .mini-field input:focus{border-color:var(--gold)}
+.commerce-banner{background:linear-gradient(135deg,rgba(201,169,110,0.15),rgba(201,169,110,0.05));border:1px solid rgba(201,169,110,0.25);border-radius:12px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.commerce-banner-icon{font-size:24px}
+.commerce-banner-name{font-size:15px;font-weight:600;color:var(--white)}
+.commerce-banner-type{font-size:11px;color:var(--gray)}
 .notif{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--success);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:600;transition:transform .3s;z-index:999;white-space:nowrap}
 .notif.show{transform:translateX(-50%) translateY(0)}
 </style>
@@ -117,22 +123,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 
 <div class="nav">
   <div class="logo">Fidèle<span>MC</span></div>
-  <div class="nav-tabs">
+  <div class="nav-tabs" id="nav-tabs">
     <button class="tab-btn active" onclick="switchTab('client')">Client</button>
     <button class="tab-btn" onclick="switchTab('merchant')">Commerçant</button>
   </div>
 </div>
 
+<!-- CLIENT: EMAIL -->
 <div id="s-scan" class="screen active">
+  <div id="commerce-banner" style="display:none" class="commerce-banner">
+    <div class="commerce-banner-icon" id="banner-icon">🏪</div>
+    <div>
+      <div class="commerce-banner-name" id="banner-name"></div>
+      <div class="commerce-banner-type" id="banner-type"></div>
+    </div>
+  </div>
   <p class="screen-title">Bienvenue 👋</p>
-  <p class="screen-sub">Entrez votre email pour accéder à votre portefeuille fidélité.</p>
+  <p class="screen-sub" id="scan-sub">Entrez votre email pour accéder à votre portefeuille fidélité.</p>
   <div class="card">
     <div class="field"><label>Votre email</label><input type="email" id="email-input" placeholder="prenom@email.com"/></div>
     <button class="btn btn-gold" id="btn-continue" onclick="handleEmailSubmit()">Continuer →</button>
   </div>
-  <p style="font-size:11px;color:var(--gray);text-align:center;margin-top:6px">Scan QR code chez un commerçant partenaire</p>
+  <p style="font-size:11px;color:var(--gray);text-align:center;margin-top:6px">Programme de fidélité FidèleMC</p>
 </div>
 
+<!-- CLIENT: INSCRIPTION -->
 <div id="s-register" class="screen">
   <p class="screen-title">Créer mon compte</p>
   <p class="screen-sub">Première visite ? Quelques secondes suffisent.</p>
@@ -149,6 +164,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   </div>
 </div>
 
+<!-- CLIENT: PORTEFEUILLE -->
 <div id="s-wallet" class="screen">
   <p class="screen-title">Mon portefeuille</p>
   <p class="screen-sub" id="wallet-welcome"></p>
@@ -162,11 +178,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   <button class="btn btn-outline" onclick="showScreen('s-scan')" style="margin-top:6px">← Nouvelle visite</button>
 </div>
 
+<!-- CLIENT: DÉTAIL -->
 <div id="s-detail" class="screen">
   <button class="back-btn" onclick="showScreen('s-wallet')">← Mon portefeuille</button>
   <div id="detail-content"></div>
 </div>
 
+<!-- MERCHANT: LOGIN -->
 <div id="s-merchant-login" class="screen">
   <p class="screen-title">Espace commerçant</p>
   <p class="screen-sub">Connectez-vous pour gérer votre programme.</p>
@@ -177,6 +195,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   </div>
 </div>
 
+<!-- MERCHANT: DASHBOARD -->
 <div id="s-merchant-dash" class="screen">
   <p class="screen-title" id="dash-title"></p>
   <p class="screen-sub" id="dash-sub"></p>
@@ -261,15 +280,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     <div class="card">
       <div class="qr-wrap">
         <p style="font-size:14px;font-weight:600;color:var(--white);margin-bottom:4px" id="qr-commerce-name"></p>
-        <p style="font-size:11px;color:var(--gold);margin-bottom:14px;font-family:monospace" id="qr-url"></p>
-        <div class="qr-box"><canvas id="qr-canvas" width="160" height="160"></canvas></div><br>
-        <button class="btn-sm btn-blue" onclick="downloadQR()" style="margin-top:8px">⬇ Télécharger</button>
+        <p style="font-size:11px;color:var(--gold);margin-bottom:14px;font-family:monospace" id="qr-url-display"></p>
+        <div class="qr-box" id="qr-box"></div>
+        <br>
+        <button class="btn-sm btn-blue" onclick="downloadQR()" style="margin-top:12px">⬇ Télécharger le QR code</button>
       </div>
       <div class="qr-instructions">
         <p class="section-title">Comment l'utiliser</p>
         <div class="qr-step"><div class="qr-num">1</div><div class="qr-step-text"><strong>Imprimez</strong> et placez sur votre comptoir</div></div>
-        <div class="qr-step"><div class="qr-num">2</div><div class="qr-step-text">Le client <strong>scanne</strong> avec son téléphone</div></div>
-        <div class="qr-step"><div class="qr-num">3</div><div class="qr-step-text">Il entre son email → sélectionnez le <strong>palier</strong> et validez</div></div>
+        <div class="qr-step"><div class="qr-num">2</div><div class="qr-step-text">Le client <strong>scanne</strong> → arrive directement sur la page de fidélité</div></div>
+        <div class="qr-step"><div class="qr-num">3</div><div class="qr-step-text">Il entre son email → vous <strong>validez</strong> et sélectionnez le palier</div></div>
         <div class="qr-step"><div class="qr-num">4</div><div class="qr-step-text">Points crédités dans le <strong>Sheets automatiquement</strong></div></div>
       </div>
     </div>
@@ -292,8 +312,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbynPCew20k86sNz9xQ35vvzuxMnPKouxtPamP3EypX51ACdPAZpcY-0-GHBX4la2Zk2/exec';
-let currentUser=null,currentMerchant=null,pendingClient=null,selectedPalier=null;
-let merchantClients=[],dbSortKey='nom',dbSortAsc=true,qrGenerated=false;
+const BASE_URL = 'https://liliang03-lil.github.io/Fidelitemc/';
+
+let currentUser=null, currentMerchant=null, pendingClient=null, selectedPalier=null;
+let merchantClients=[], dbSortKey='nom', dbSortAsc=true, qrGenerated=false;
+let scanCommerceId=null, scanCommerceData=null;
 const promos=[];
 const PALIERS_DEFAULT=[
   {emoji:'🟡',label:'Petit achat',range:'1 – 10 €',pts:15,color:'#C9A96E'},
@@ -302,15 +325,41 @@ const PALIERS_DEFAULT=[
   {emoji:'💎',label:'Très grand',range:'60 € et +',pts:150,color:'#9B59B6'},
 ];
 
+// ============================================================
+// DÉTECTION QR CODE — lecture du paramètre ?commerce=xxx
+// ============================================================
+async function initFromURL(){
+  const params = new URLSearchParams(window.location.search);
+  const commerceId = params.get('commerce');
+  if(commerceId){
+    // Mode client via QR code — cacher l'onglet commerçant
+    document.getElementById('nav-tabs').style.display='none';
+    scanCommerceId = commerceId;
+    try{
+      const data = await apiGet({action:'getCommercant',email:'_lookup_',password:'_lookup_',commerce_id:commerceId});
+      if(data && data.nom){
+        scanCommerceData = data;
+        document.getElementById('commerce-banner').style.display='flex';
+        document.getElementById('banner-name').textContent = data.nom;
+        document.getElementById('banner-type').textContent = data.type||'';
+        document.getElementById('scan-sub').textContent = 'Entrez votre email pour gagner des points chez '+data.nom+' !';
+      }
+    }catch(e){}
+  }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
 function switchTab(tab){document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(tab==='client'?0:1)));showScreen(tab==='client'?'s-scan':'s-merchant-login')}
 function switchMNav(btn,panelId){
   document.querySelectorAll('.m-nav-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
   ['dash-home','dash-db','dash-promos','dash-email','dash-qr','dash-settings'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById(panelId).style.display='block';
-  if(panelId==='dash-qr')generateQR();
-  if(panelId==='dash-db')loadMerchantClients().then(renderDB);
-  if(panelId==='dash-settings')renderPaliersConfig();
+  if(panelId==='dash-qr') generateQR();
+  if(panelId==='dash-db') loadMerchantClients().then(renderDB);
+  if(panelId==='dash-settings') renderPaliersConfig();
 }
 function showNotif(msg,err=false){
   const n=document.getElementById('notif');n.textContent=msg;n.style.background=err?'var(--danger)':'var(--success)';
@@ -321,8 +370,7 @@ function setLoading(id,on,txt=''){
   b.innerHTML=on?'<span style="display:flex;align-items:center;justify-content:center;gap:8px"><span class="spinner"></span>Chargement...</span>':txt;
 }
 async function apiGet(p){
-  const url=API+'?'+new URLSearchParams(p);
-  const r=await fetch(url,{redirect:'follow'});
+  const r=await fetch(API+'?'+new URLSearchParams(p),{redirect:'follow'});
   return r.json();
 }
 async function apiPost(d){
@@ -330,13 +378,16 @@ async function apiPost(d){
   return r.json();
 }
 
+// ============================================================
+// CLIENT
+// ============================================================
 async function handleEmailSubmit(){
   const email=document.getElementById('email-input').value.trim().toLowerCase();
   if(!email||!email.includes('@')){showNotif('Email invalide',true);return;}
   currentUser=email;setLoading('btn-continue',true);
   try{
     const data=await apiGet({action:'getClient',email});
-    if(data.found)await renderWallet(email,data);
+    if(data.found) await renderWallet(email,data);
     else showScreen('s-register');
   }catch(e){showNotif('Erreur : '+e.message,true);}
   setLoading('btn-continue',false,'Continuer →');
@@ -369,7 +420,10 @@ async function renderWallet(email,data){
   document.getElementById('wallet-total').textContent=total;
   document.getElementById('wallet-programs').textContent=programmes.length+' programme'+(programmes.length>1?'s':'')+' actif'+(programmes.length>1?'s':'');
   const list=document.getElementById('commerce-list');list.innerHTML='';
-  if(!programmes.length){list.innerHTML='<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px 0">Aucun programme actif.<br>Scannez un QR code !</div>';return;}
+  if(!programmes.length){
+    list.innerHTML='<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px 0">Aucun programme actif.<br>Scannez un QR code !</div>';
+    return;
+  }
   programmes.forEach(p=>{
     const reward=p.reward||500,pct=Math.min((p.points/reward)*100,100);
     const d=document.createElement('div');d.className='commerce-card';d.onclick=()=>renderDetail(p);
@@ -378,8 +432,9 @@ async function renderWallet(email,data){
         <div style="width:38px;height:38px;border-radius:10px;background:rgba(201,169,110,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;margin-right:10px">🏪</div>
         <div><div style="font-size:14px;font-weight:600;color:var(--white)">${p.commerce_nom||p.commerce_id}</div>
         <div style="font-size:11px;color:var(--gray)">${p.visites} visite${p.visites>1?'s':''}</div></div></div>
-      <div style="text-align:right"><div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold)">${p.points}</div>
-      <div style="font-size:10px;color:var(--gray)">pts</div></div></div>
+      <div style="text-align:right">
+        <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold)">${p.points}</div>
+        <div style="font-size:10px;color:var(--gray)">pts</div></div></div>
       <div class="commerce-bar-wrap"><div class="commerce-bar" style="width:${pct}%;background:var(--gold)"></div></div>
       <div style="font-size:10px;color:var(--gray);margin-top:4px">Encore <span style="color:var(--gold)">${Math.max(reward-p.points,0)} pts</span> pour la récompense</div>`;
     list.appendChild(d);
@@ -400,6 +455,9 @@ function renderDetail(p){
   showScreen('s-detail');
 }
 
+// ============================================================
+// MERCHANT
+// ============================================================
 async function handleMerchantLogin(){
   const email=document.getElementById('m-email').value.trim().toLowerCase();
   const pass=document.getElementById('m-pass').value;
@@ -437,8 +495,10 @@ async function renderMerchantDash(){
         <div><div style="font-size:13px;font-weight:600">${c.prenom} ${c.nom}</div>
         <div style="font-size:11px;color:var(--gray)">${c.email}</div></div>
       </div>
-      <div style="text-align:right"><div style="font-size:11px;color:var(--gold)">${c.dernierScan||'—'}</div>
-      <div style="font-size:11px;color:var(--gray)">${c.points} pts</div></div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--gold)">${c.dernierScan||'—'}</div>
+        <div style="font-size:11px;color:var(--gray)">${c.points} pts</div>
+      </div>
     </div>`).join(''):'<div style="color:var(--gray);font-size:13px;text-align:center;padding:16px 0">Aucun scan encore.</div>';
   renderPromos();
   document.querySelectorAll('.m-nav-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
@@ -500,8 +560,13 @@ async function validateVisit(){
     await loadMerchantClients();
   }catch(e){showNotif('Erreur',true);}
 }
-function rejectVisit(){showNotif('Visite refusée',true);document.querySelector('.validate-box').style.opacity='0.3';document.querySelector('.validate-box').style.pointerEvents='none';}
+function rejectVisit(){
+  showNotif('Visite refusée',true);
+  document.querySelector('.validate-box').style.opacity='0.3';
+  document.querySelector('.validate-box').style.pointerEvents='none';
+}
 
+// DB
 function renderDB(){
   const q=(document.getElementById('db-search').value||'').toLowerCase();
   let rows=[...merchantClients];
@@ -524,6 +589,7 @@ function exportCSV(){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='clients.csv';a.click();showNotif('CSV téléchargé ⬇');
 }
 
+// PALIERS
 function getPaliers(){try{const s=localStorage.getItem('paliers_'+(currentMerchant?.commerce_id||'x'));if(s)return JSON.parse(s);}catch(e){}return PALIERS_DEFAULT;}
 function savePaliers(){
   const p=getPaliers().map((p,i)=>({...p,range:document.getElementById('pc-range-'+i)?.value||p.range,pts:parseInt(document.getElementById('pc-pts-'+i)?.value)||p.pts,label:document.getElementById('pc-label-'+i)?.value||p.label}));
@@ -548,6 +614,7 @@ function renderPaliersPreview(){
     <div class="palier-pts" style="color:${p.color}">+${p.pts} pts</div><div class="palier-desc">${p.label}</div></div>`).join('');
 }
 
+// PROMOS
 function renderPromos(){
   document.getElementById('promo-list').innerHTML=promos.length?promos.map((p,i)=>`
     <div class="promo-card ${p.active?'promo-active':''}">
@@ -570,6 +637,7 @@ function addPromo(){
   renderPromos();showNotif('Promotion créée ✓');
 }
 
+// EMAIL
 function previewEmail(){
   const subject=document.getElementById('email-subject').value.trim(),body=document.getElementById('email-body').value.trim();
   if(!subject||!body){showNotif('Remplissez l\'objet et le message',true);return;}
@@ -583,18 +651,35 @@ function previewEmail(){
 }
 function sendEmail(){showNotif('Emails envoyés ✉️');document.getElementById('email-preview-panel').style.display='none';}
 
+// QR CODE — vrai QR généré avec qrcodejs
 function generateQR(){
   if(qrGenerated)return;
+  const commerceId = currentMerchant.commerce_id;
+  const qrUrl = BASE_URL+'?commerce='+commerceId;
   document.getElementById('qr-commerce-name').textContent='🏪 '+currentMerchant.nom;
-  document.getElementById('qr-url').textContent='fidelitemc.com/scan/'+currentMerchant.commerce_id;
-  const canvas=document.getElementById('qr-canvas'),ctx=canvas.getContext('2d');
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,160,160);ctx.fillStyle='#0A1628';
-  const cell=7,pat=[[1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,0,1],[1,0,0,0,0,0,1,0,0,1,0,1,1,0,0,0,0,0,1,0,0],[1,0,1,1,1,0,1,0,1,0,1,0,1,0,1,1,1,0,1,0,1],[1,0,1,1,1,0,1,0,0,1,1,1,1,0,1,1,1,0,1,0,0],[1,0,1,1,1,0,1,0,1,1,0,0,1,0,1,1,1,0,1,0,1],[1,0,0,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,0],[1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,0,1],[0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,1],[1,0,1,1,0,1,1,1,0,1,1,0,1,1,0,1,1,1,0,1,0],[0,1,0,0,1,0,0,0,1,0,0,1,0,1,1,0,0,0,1,0,1],[1,1,1,0,1,1,1,1,0,1,0,0,1,0,1,1,1,0,1,1,0],[0,0,1,1,0,0,0,1,1,0,1,1,0,1,0,0,1,1,0,0,1],[1,1,1,1,1,0,1,0,0,1,1,0,1,1,1,0,1,1,1,1,0],[0,0,0,0,0,0,0,0,1,1,0,1,0,1,0,0,0,1,0,0,1],[1,1,1,1,1,1,1,0,0,0,1,0,1,0,1,0,1,0,1,1,0],[1,0,0,0,0,0,1,0,1,1,0,1,1,1,0,1,0,1,0,0,1],[1,0,1,1,1,0,1,1,0,1,1,0,1,0,1,1,1,0,1,1,0],[1,0,1,1,1,0,1,0,1,0,0,1,0,1,0,0,1,1,0,0,1],[1,0,1,1,1,0,1,0,0,1,1,0,1,0,1,0,1,0,1,1,0],[1,0,0,0,0,0,1,0,1,1,0,1,1,1,0,1,0,1,0,0,1],[1,1,1,1,1,1,1,0,0,0,1,0,1,0,1,0,1,0,1,1,0]];
-  pat.forEach((row,r)=>row.forEach((v,c)=>{if(v)ctx.fillRect(c*cell+4,r*cell+4,cell-1,cell-1)}));
+  document.getElementById('qr-url-display').textContent=qrUrl;
+  document.getElementById('qr-box').innerHTML='';
+  new QRCode(document.getElementById('qr-box'),{
+    text: qrUrl,
+    width: 180,
+    height: 180,
+    colorDark: '#0A1628',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
   qrGenerated=true;
 }
-function downloadQR(){const a=document.createElement('a');a.download='qrcode.png';a.href=document.getElementById('qr-canvas').toDataURL();a.click();showNotif('Téléchargé ⬇');}
+function downloadQR(){
+  setTimeout(()=>{
+    const img=document.querySelector('#qr-box img');
+    if(img){const a=document.createElement('a');a.download='qrcode-'+currentMerchant.commerce_id+'.png';a.href=img.src;a.click();showNotif('QR code téléchargé ⬇');}
+  },300);
+}
+
 function logout(){currentMerchant=null;merchantClients=[];showScreen('s-merchant-login');}
+
+// INIT
+initFromURL();
 </script>
 </body>
 </html>
