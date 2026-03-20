@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FidèleMC</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#C9A96E;--gold-light:#E8D5A3;--gold-dark:#8B6914;--navy:#0A1628;--navy-mid:#1A2E4A;--white:#FAFAF7;--gray:#8A9BB0;--success:#2ECC8A;--danger:#E85555;}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid rgba(201,169,110,0.15)}
+.logo{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold)}
+.logo span{color:var(--white);font-style:italic}
+.nav-tabs{display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:10px;padding:4px}
+.tab-btn{padding:7px 16px;border-radius:7px;border:none;background:transparent;color:var(--gray);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s}
+.tab-btn.active{background:var(--gold);color:var(--navy);font-weight:600}
+.screen{display:none;padding:24px;max-width:480px;margin:0 auto;animation:fadeUp .3s ease}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(201,169,110,0.12);border-radius:16px;padding:22px;margin-bottom:14px}
+.card-gold{background:linear-gradient(135deg,rgba(201,169,110,0.12),rgba(201,169,110,0.04));border-color:rgba(201,169,110,0.3)}
+.screen-title{font-family:'DM Serif Display',serif;font-size:26px;color:var(--white);margin-bottom:5px}
+.screen-sub{font-size:13px;color:var(--gray);margin-bottom:22px;line-height:1.5}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.field input::placeholder,.field textarea::placeholder{color:rgba(255,255,255,0.25)}
+.field select option{background:var(--navy-mid)}
+.field textarea{resize:vertical;min-height:80px}
+.btn{width:100%;padding:13px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-gold:hover{background:var(--gold-light)}
+.btn-gold:disabled{opacity:0.5;cursor:not-allowed}
+.btn-outline{background:transparent;border:1px solid rgba(201,169,110,0.3);color:var(--gold);margin-top:8px}
+.btn-sm{width:auto;padding:7px 14px;font-size:12px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;transition:all .2s}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:rgba(232,85,85,0.15);color:var(--danger);border:1px solid rgba(232,85,85,0.3)}
+.btn-blue{background:rgba(74,142,212,0.2);color:#4A8ED4;border:1px solid rgba(74,142,212,0.3)}
+.section-title{font-size:11px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gold);cursor:pointer;margin-bottom:18px;background:none;border:none;font-family:'DM Sans',sans-serif}
+.m-nav{display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
+.m-nav::-webkit-scrollbar{display:none}
+.m-nav-btn{padding:8px 14px;border-radius:99px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--gray);transition:all .2s;white-space:nowrap;flex-shrink:0}
+.m-nav-btn.active{background:rgba(201,169,110,0.15);border-color:var(--gold);color:var(--gold)}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px}
+.stat-card{background:rgba(255,255,255,0.04);border:1px solid rgba(201,169,110,0.1);border-radius:12px;padding:12px;text-align:center}
+.stat-num{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold)}
+.stat-lbl{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.validate-box{background:rgba(46,204,138,0.06);border:1px solid rgba(46,204,138,0.2);border-radius:14px;padding:18px;margin-bottom:14px}
+.validate-title{font-size:12px;font-weight:600;color:var(--success);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.validate-pulse{width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 1.5s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+.validate-client{display:flex;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.validate-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--navy);flex-shrink:0;margin-right:12px;background:linear-gradient(135deg,#C9A96E88,#C9A96E)}
+.paliers-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.palier-btn{padding:12px 10px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);cursor:pointer;transition:all .2s;text-align:center;font-family:'DM Sans',sans-serif}
+.palier-btn:hover{border-color:rgba(201,169,110,0.4)}
+.palier-btn.selected{border-color:var(--gold);background:rgba(201,169,110,0.12)}
+.palier-emoji{font-size:20px;margin-bottom:4px}
+.palier-range{font-size:12px;color:var(--white);font-weight:600}
+.palier-pts{font-size:11px;margin-top:3px;font-weight:600}
+.palier-desc{font-size:10px;color:var(--gray);margin-top:2px}
+.pts-preview{background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.recent-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.recent-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--navy);flex-shrink:0;margin-right:10px}
+.db-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.db-search{flex:1;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none}
+.db-search::placeholder{color:rgba(255,255,255,0.25)}
+.db-search:focus{border-color:var(--gold)}
+.db-table-wrap{overflow-x:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.07)}
+.db-table{width:100%;border-collapse:collapse;min-width:400px}
+.db-table th{background:rgba(201,169,110,0.1);padding:10px 12px;font-size:11px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;text-align:left;border-bottom:1px solid rgba(255,255,255,0.07);cursor:pointer}
+.db-table td{padding:11px 12px;font-size:13px;color:var(--white);border-bottom:1px solid rgba(255,255,255,0.04)}
+.db-table tr:last-child td{border-bottom:none}
+.db-table tr:hover td{background:rgba(255,255,255,0.02)}
+.db-badge{display:inline-block;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:600;background:rgba(46,204,138,0.12);color:var(--success);border:1px solid rgba(46,204,138,0.2)}
+.db-footer{display:flex;justify-content:space-between;margin-top:12px;font-size:12px;color:var(--gray)}
+.promo-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px;margin-bottom:10px}
+.promo-active{border-color:rgba(46,204,138,0.3);background:rgba(46,204,138,0.04)}
+.promo-badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:600;margin-bottom:8px}
+.promo-badge-on{background:rgba(46,204,138,0.15);color:var(--success);border:1px solid rgba(46,204,138,0.25)}
+.promo-badge-off{background:rgba(255,255,255,0.06);color:var(--gray);border:1px solid rgba(255,255,255,0.08)}
+.email-preview{background:var(--navy-mid);border-radius:10px;padding:16px;margin-top:12px;border:1px solid rgba(255,255,255,0.08)}
+.email-preview-header{font-size:11px;color:var(--gray);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.qr-wrap{text-align:center;padding:16px 0}
+.qr-box{display:inline-block;background:#fff;padding:16px;border-radius:16px;margin-bottom:14px}
+.qr-instructions{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px}
+.qr-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.qr-step:last-child{margin-bottom:0}
+.qr-num{width:24px;height:24px;border-radius:50%;background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);color:var(--gold);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qr-step-text{font-size:12px;color:var(--gray);line-height:1.5}
+.qr-step-text strong{color:var(--white)}
+.wallet-total{font-family:'DM Serif Display',serif;font-size:50px;color:var(--gold);line-height:1;text-align:center}
+.commerce-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;transition:all .2s}
+.commerce-card:hover{border-color:rgba(201,169,110,0.3)}
+.commerce-bar-wrap{margin-top:8px;background:rgba(255,255,255,0.06);border-radius:99px;height:4px;overflow:hidden}
+.commerce-bar{height:100%;border-radius:99px;transition:width 1s ease}
+.rgpd{display:flex;align-items:flex-start;gap:10px;margin:12px 0}
+.rgpd input{width:16px;height:16px;margin-top:2px;accent-color:var(--gold);flex-shrink:0}
+.rgpd label{font-size:11px;color:var(--gray);line-height:1.5}
+.rgpd label a{color:var(--gold);text-decoration:none}
+.loading{display:flex;align-items:center;gap:10px;padding:20px;color:var(--gray);font-size:13px}
+.spinner{width:18px;height:18px;border:2px solid rgba(201,169,110,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.palier-config{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;margin-bottom:10px}
+.palier-config-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.mini-field label{font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px}
+.mini-field input{width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none}
+.mini-field input:focus{border-color:var(--gold)}
+.notif{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--success);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:600;transition:transform .3s;z-index:999;white-space:nowrap}
+.notif.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="logo">Fidèle<span>MC</span></div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('client')">Client</button>
+    <button class="tab-btn" onclick="switchTab('merchant')">Commerçant</button>
+  </div>
+</div>
+
+<div id="s-scan" class="screen active">
+  <p class="screen-title">Bienvenue 👋</p>
+  <p class="screen-sub">Entrez votre email pour accéder à votre portefeuille fidélité.</p>
+  <div class="card">
+    <div class="field"><label>Votre email</label><input type="email" id="email-input" placeholder="prenom@email.com"/></div>
+    <button class="btn btn-gold" id="btn-continue" onclick="handleEmailSubmit()">Continuer →</button>
+  </div>
+  <p style="font-size:11px;color:var(--gray);text-align:center;margin-top:6px">Scan QR code chez un commerçant partenaire</p>
+</div>
+
+<div id="s-register" class="screen">
+  <p class="screen-title">Créer mon compte</p>
+  <p class="screen-sub">Première visite ? Quelques secondes suffisent.</p>
+  <div class="card">
+    <div class="field"><label>Prénom</label><input type="text" id="reg-prenom" placeholder="Votre prénom"/></div>
+    <div class="field"><label>Nom</label><input type="text" id="reg-nom" placeholder="Votre nom"/></div>
+    <div class="field"><label>Téléphone</label><input type="tel" id="reg-tel" placeholder="+377 00 00 00 00"/></div>
+    <div class="rgpd">
+      <input type="checkbox" id="rgpd-check"/>
+      <label for="rgpd-check">J'accepte les <a href="#">conditions d'utilisation</a> et la <a href="#">politique de confidentialité</a> (RGPD).</label>
+    </div>
+    <button class="btn btn-gold" id="btn-register" onclick="handleRegister()">Rejoindre le programme</button>
+    <button class="btn btn-outline" onclick="showScreen('s-scan')">← Retour</button>
+  </div>
+</div>
+
+<div id="s-wallet" class="screen">
+  <p class="screen-title">Mon portefeuille</p>
+  <p class="screen-sub" id="wallet-welcome"></p>
+  <div class="card card-gold" style="padding:20px">
+    <div class="wallet-total" id="wallet-total">0</div>
+    <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.1em;text-align:center;margin-top:4px">points au total</div>
+    <p id="wallet-programs" style="font-size:12px;color:var(--gray);text-align:center;margin-top:6px"></p>
+  </div>
+  <p class="section-title">Mes commerçants</p>
+  <div id="commerce-list"></div>
+  <button class="btn btn-outline" onclick="showScreen('s-scan')" style="margin-top:6px">← Nouvelle visite</button>
+</div>
+
+<div id="s-detail" class="screen">
+  <button class="back-btn" onclick="showScreen('s-wallet')">← Mon portefeuille</button>
+  <div id="detail-content"></div>
+</div>
+
+<div id="s-merchant-login" class="screen">
+  <p class="screen-title">Espace commerçant</p>
+  <p class="screen-sub">Connectez-vous pour gérer votre programme.</p>
+  <div class="card">
+    <div class="field"><label>Email</label><input type="email" id="m-email" placeholder="votre@commerce.mc"/></div>
+    <div class="field"><label>Mot de passe</label><input type="password" id="m-pass" placeholder="••••••••"/></div>
+    <button class="btn btn-gold" id="btn-login" onclick="handleMerchantLogin()">Se connecter</button>
+  </div>
+</div>
+
+<div id="s-merchant-dash" class="screen">
+  <p class="screen-title" id="dash-title"></p>
+  <p class="screen-sub" id="dash-sub"></p>
+  <div class="m-nav">
+    <button class="m-nav-btn active" onclick="switchMNav(this,'dash-home')">🏠 Accueil</button>
+    <button class="m-nav-btn" onclick="switchMNav(this,'dash-db')">🗄️ Base de données</button>
+    <button class="m-nav-btn" onclick="switchMNav(this,'dash-promos')">🎁 Promotions</button>
+    <button class="m-nav-btn" onclick="switchMNav(this,'dash-email')">✉️ Emailings</button>
+    <button class="m-nav-btn" onclick="switchMNav(this,'dash-qr')">📱 QR Code</button>
+    <button class="m-nav-btn" onclick="switchMNav(this,'dash-settings')">⚙️ Paramètres</button>
+  </div>
+  <div id="dash-home">
+    <div class="stats-row" id="dash-stats"></div>
+    <div id="pending-scan"><p style="font-size:13px;color:var(--gray);margin-bottom:16px">Aucun scan en attente.</p></div>
+    <p class="section-title">3 derniers scans</p>
+    <div id="dash-recent"></div>
+  </div>
+  <div id="dash-db" style="display:none">
+    <div class="db-toolbar">
+      <input class="db-search" id="db-search" placeholder="Rechercher..." oninput="renderDB()"/>
+      <button class="btn-sm btn-blue" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+    <div class="db-table-wrap">
+      <table class="db-table">
+        <thead><tr>
+          <th onclick="sortDB('nom')">Nom ↕</th>
+          <th onclick="sortDB('email')">Email ↕</th>
+          <th onclick="sortDB('points')">Points ↕</th>
+          <th onclick="sortDB('visites')">Visites ↕</th>
+          <th>Dernier scan</th>
+        </tr></thead>
+        <tbody id="db-body"></tbody>
+      </table>
+    </div>
+    <div class="db-footer"><span id="db-count"></span><span id="db-total-pts"></span></div>
+  </div>
+  <div id="dash-promos" style="display:none">
+    <div id="promo-list"></div>
+    <div class="card">
+      <p class="section-title">Créer une promotion</p>
+      <div class="field"><label>Titre</label><input type="text" id="promo-titre" placeholder="Ex: Café offert"/></div>
+      <div class="field"><label>Description</label><input type="text" id="promo-desc-inp" placeholder="Ex: Pour tout achat de 3 viennoiseries"/></div>
+      <div class="field"><label>Condition</label>
+        <select id="promo-cond">
+          <option value="50">Dès 50 points</option><option value="100">Dès 100 points</option>
+          <option value="200">Dès 200 points</option><option value="0">Tous les clients</option>
+        </select>
+      </div>
+      <button class="btn btn-gold" onclick="addPromo()">Créer</button>
+    </div>
+  </div>
+  <div id="dash-email" style="display:none">
+    <div class="card">
+      <p class="section-title">Envoyer un email promotionnel</p>
+      <div class="field"><label>Destinataires</label>
+        <select id="email-target">
+          <option value="all">Tous mes clients</option>
+          <option value="50">50+ points</option>
+          <option value="100">100+ points</option>
+          <option value="200">200+ points</option>
+        </select>
+      </div>
+      <div class="field"><label>Objet</label><input type="text" id="email-subject" placeholder="Une offre spéciale 🎁"/></div>
+      <div class="field"><label>Message</label><textarea id="email-body" placeholder="Bonjour {prénom},&#10;&#10;..."></textarea></div>
+      <button class="btn btn-gold" onclick="previewEmail()">Prévisualiser →</button>
+    </div>
+    <div id="email-preview-panel" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(201,169,110,0.15);border-radius:14px;padding:20px;margin-top:16px">
+      <p class="section-title">Aperçu</p>
+      <div class="email-preview">
+        <div class="email-preview-header">
+          <div>De : <strong id="ep-from"></strong></div>
+          <div>À : <span id="ep-to"></span></div>
+          <div>Objet : <span id="ep-subject"></span></div>
+        </div>
+        <div id="ep-body" style="font-size:13px;color:var(--white);line-height:1.6"></div>
+      </div>
+      <button class="btn btn-gold" style="margin-top:14px" onclick="sendEmail()">Envoyer</button>
+      <button class="btn btn-outline" onclick="document.getElementById('email-preview-panel').style.display='none'">Modifier</button>
+    </div>
+  </div>
+  <div id="dash-qr" style="display:none">
+    <div class="card">
+      <div class="qr-wrap">
+        <p style="font-size:14px;font-weight:600;color:var(--white);margin-bottom:4px" id="qr-commerce-name"></p>
+        <p style="font-size:11px;color:var(--gold);margin-bottom:14px;font-family:monospace" id="qr-url"></p>
+        <div class="qr-box"><canvas id="qr-canvas" width="160" height="160"></canvas></div><br>
+        <button class="btn-sm btn-blue" onclick="downloadQR()" style="margin-top:8px">⬇ Télécharger</button>
+      </div>
+      <div class="qr-instructions">
+        <p class="section-title">Comment l'utiliser</p>
+        <div class="qr-step"><div class="qr-num">1</div><div class="qr-step-text"><strong>Imprimez</strong> et placez sur votre comptoir</div></div>
+        <div class="qr-step"><div class="qr-num">2</div><div class="qr-step-text">Le client <strong>scanne</strong> avec son téléphone</div></div>
+        <div class="qr-step"><div class="qr-num">3</div><div class="qr-step-text">Il entre son email → sélectionnez le <strong>palier</strong> et validez</div></div>
+        <div class="qr-step"><div class="qr-num">4</div><div class="qr-step-text">Points crédités dans le <strong>Sheets automatiquement</strong></div></div>
+      </div>
+    </div>
+  </div>
+  <div id="dash-settings" style="display:none">
+    <div class="card">
+      <p class="section-title">Configurer mes paliers</p>
+      <div id="paliers-config"></div>
+      <button class="btn btn-gold" style="margin-top:8px" onclick="savePaliers()">Enregistrer</button>
+    </div>
+    <div class="card">
+      <p class="section-title">Aperçu</p>
+      <div class="paliers-grid" id="paliers-preview" style="pointer-events:none"></div>
+    </div>
+  </div>
+  <button class="btn btn-outline" onclick="logout()" style="margin-top:4px">← Déconnexion</button>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbynPCew20k86sNz9xQ35vvzuxMnPKouxtPamP3EypX51ACdPAZpcY-0-GHBX4la2Zk2/exec';
+let currentUser=null,currentMerchant=null,pendingClient=null,selectedPalier=null;
+let merchantClients=[],dbSortKey='nom',dbSortAsc=true,qrGenerated=false;
+const promos=[];
+const PALIERS_DEFAULT=[
+  {emoji:'🟡',label:'Petit achat',range:'1 – 10 €',pts:15,color:'#C9A96E'},
+  {emoji:'🟠',label:'Achat moyen',range:'10 – 30 €',pts:40,color:'#E8903A'},
+  {emoji:'🔴',label:'Grand achat',range:'30 – 60 €',pts:80,color:'#E85555'},
+  {emoji:'💎',label:'Très grand',range:'60 € et +',pts:150,color:'#9B59B6'},
+];
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function switchTab(tab){document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(tab==='client'?0:1)));showScreen(tab==='client'?'s-scan':'s-merchant-login')}
+function switchMNav(btn,panelId){
+  document.querySelectorAll('.m-nav-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  ['dash-home','dash-db','dash-promos','dash-email','dash-qr','dash-settings'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById(panelId).style.display='block';
+  if(panelId==='dash-qr')generateQR();
+  if(panelId==='dash-db')loadMerchantClients().then(renderDB);
+  if(panelId==='dash-settings')renderPaliersConfig();
+}
+function showNotif(msg,err=false){
+  const n=document.getElementById('notif');n.textContent=msg;n.style.background=err?'var(--danger)':'var(--success)';
+  n.classList.add('show');setTimeout(()=>n.classList.remove('show'),3000);
+}
+function setLoading(id,on,txt=''){
+  const b=document.getElementById(id);if(!b)return;b.disabled=on;
+  b.innerHTML=on?'<span style="display:flex;align-items:center;justify-content:center;gap:8px"><span class="spinner"></span>Chargement...</span>':txt;
+}
+async function apiGet(p){
+  const url=API+'?'+new URLSearchParams(p);
+  const r=await fetch(url,{redirect:'follow'});
+  return r.json();
+}
+async function apiPost(d){
+  const r=await fetch(API,{method:'POST',body:JSON.stringify(d),headers:{'Content-Type':'text/plain'}});
+  return r.json();
+}
+
+async function handleEmailSubmit(){
+  const email=document.getElementById('email-input').value.trim().toLowerCase();
+  if(!email||!email.includes('@')){showNotif('Email invalide',true);return;}
+  currentUser=email;setLoading('btn-continue',true);
+  try{
+    const data=await apiGet({action:'getClient',email});
+    if(data.found)await renderWallet(email,data);
+    else showScreen('s-register');
+  }catch(e){showNotif('Erreur : '+e.message,true);}
+  setLoading('btn-continue',false,'Continuer →');
+}
+
+async function handleRegister(){
+  const prenom=document.getElementById('reg-prenom').value.trim();
+  const nom=document.getElementById('reg-nom').value.trim();
+  const telephone=document.getElementById('reg-tel').value.trim();
+  if(!prenom||!nom){showNotif('Remplissez tous les champs',true);return;}
+  if(!document.getElementById('rgpd-check').checked){showNotif('Acceptez les conditions RGPD',true);return;}
+  setLoading('btn-register',true);
+  try{
+    const res=await apiPost({action:'createClient',email:currentUser,prenom,nom,telephone});
+    if(res.created){showNotif('Compte créé ! Bienvenue 🎉');await renderWallet(currentUser,{prenom,programmes:[]});}
+    else showNotif(res.message||'Erreur',true);
+  }catch(e){showNotif('Erreur : '+e.message,true);}
+  setLoading('btn-register',false,'Rejoindre le programme');
+}
+
+async function renderWallet(email,data){
+  showScreen('s-wallet');
+  if(!data){
+    document.getElementById('commerce-list').innerHTML='<div class="loading"><div class="spinner"></div>Chargement...</div>';
+    try{data=await apiGet({action:'getClient',email});}catch(e){return;}
+  }
+  const programmes=data.programmes||[];
+  const total=programmes.reduce((s,p)=>s+(p.points||0),0);
+  document.getElementById('wallet-welcome').textContent='Bonjour '+(data.prenom||email.split('@')[0])+' !';
+  document.getElementById('wallet-total').textContent=total;
+  document.getElementById('wallet-programs').textContent=programmes.length+' programme'+(programmes.length>1?'s':'')+' actif'+(programmes.length>1?'s':'');
+  const list=document.getElementById('commerce-list');list.innerHTML='';
+  if(!programmes.length){list.innerHTML='<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px 0">Aucun programme actif.<br>Scannez un QR code !</div>';return;}
+  programmes.forEach(p=>{
+    const reward=p.reward||500,pct=Math.min((p.points/reward)*100,100);
+    const d=document.createElement('div');d.className='commerce-card';d.onclick=()=>renderDetail(p);
+    d.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(201,169,110,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;margin-right:10px">🏪</div>
+        <div><div style="font-size:14px;font-weight:600;color:var(--white)">${p.commerce_nom||p.commerce_id}</div>
+        <div style="font-size:11px;color:var(--gray)">${p.visites} visite${p.visites>1?'s':''}</div></div></div>
+      <div style="text-align:right"><div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold)">${p.points}</div>
+      <div style="font-size:10px;color:var(--gray)">pts</div></div></div>
+      <div class="commerce-bar-wrap"><div class="commerce-bar" style="width:${pct}%;background:var(--gold)"></div></div>
+      <div style="font-size:10px;color:var(--gray);margin-top:4px">Encore <span style="color:var(--gold)">${Math.max(reward-p.points,0)} pts</span> pour la récompense</div>`;
+    list.appendChild(d);
+  });
+}
+
+function renderDetail(p){
+  const reward=p.reward||500,pct=Math.min((p.points/reward)*100,100);
+  document.getElementById('detail-content').innerHTML=`
+    <div class="card card-gold"><div style="text-align:center;padding:20px 0">
+      <div style="font-size:28px;margin-bottom:8px">🏪</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:60px;color:var(--gold);line-height:1">${p.points}</div>
+      <div style="font-size:13px;color:var(--gray);margin-top:4px">${p.commerce_nom||p.commerce_id} · ${p.visites} visite${p.visites>1?'s':''}</div>
+      <div style="margin:14px 0 6px;background:rgba(255,255,255,0.06);border-radius:99px;height:6px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:var(--gold);border-radius:99px"></div></div>
+      <div style="font-size:11px;color:var(--gray)">Encore <span style="color:var(--gold)">${Math.max(reward-p.points,0)} pts</span> pour la récompense</div>
+    </div></div>`;
+  showScreen('s-detail');
+}
+
+async function handleMerchantLogin(){
+  const email=document.getElementById('m-email').value.trim().toLowerCase();
+  const pass=document.getElementById('m-pass').value;
+  if(!email||!pass){showNotif('Remplissez tous les champs',true);return;}
+  setLoading('btn-login',true);
+  try{
+    const data=await apiGet({action:'getCommercant',email,password:pass});
+    if(data.found){currentMerchant=data;qrGenerated=false;await renderMerchantDash();}
+    else showNotif('Email ou mot de passe incorrect',true);
+  }catch(e){showNotif('Erreur : '+e.message,true);}
+  setLoading('btn-login',false,'Se connecter');
+}
+
+async function loadMerchantClients(){
+  try{const d=await apiGet({action:'getClients',commerce_id:currentMerchant.commerce_id});merchantClients=d.clients||[];}
+  catch(e){merchantClients=[];}
+}
+
+async function renderMerchantDash(){
+  document.getElementById('dash-title').textContent='🏪 '+currentMerchant.nom;
+  document.getElementById('dash-sub').textContent=currentMerchant.type||'';
+  document.getElementById('dash-stats').innerHTML='<div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Chargement...</div>';
+  await loadMerchantClients();
+  const totalV=merchantClients.reduce((s,c)=>s+(c.visites||0),0);
+  const totalP=merchantClients.reduce((s,c)=>s+(c.points||0),0);
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${merchantClients.length}</div><div class="stat-lbl">Clients</div></div>
+    <div class="stat-card"><div class="stat-num">${totalV}</div><div class="stat-lbl">Visites</div></div>
+    <div class="stat-card"><div class="stat-num">${totalP}</div><div class="stat-lbl">Pts donnés</div></div>`;
+  const sorted=[...merchantClients].sort((a,b)=>new Date(b.dernierScan||0)-new Date(a.dernierScan||0)).slice(0,3);
+  document.getElementById('dash-recent').innerHTML=sorted.length?sorted.map(c=>`
+    <div class="recent-card">
+      <div style="display:flex;align-items:center;flex:1">
+        <div class="recent-avatar" style="background:linear-gradient(135deg,#C9A96E88,#C9A96E)">${(c.prenom||'?')[0].toUpperCase()}</div>
+        <div><div style="font-size:13px;font-weight:600">${c.prenom} ${c.nom}</div>
+        <div style="font-size:11px;color:var(--gray)">${c.email}</div></div>
+      </div>
+      <div style="text-align:right"><div style="font-size:11px;color:var(--gold)">${c.dernierScan||'—'}</div>
+      <div style="font-size:11px;color:var(--gray)">${c.points} pts</div></div>
+    </div>`).join(''):'<div style="color:var(--gray);font-size:13px;text-align:center;padding:16px 0">Aucun scan encore.</div>';
+  renderPromos();
+  document.querySelectorAll('.m-nav-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  ['dash-home','dash-db','dash-promos','dash-email','dash-qr','dash-settings'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'block':'none');
+  showNotif('Connecté : '+currentMerchant.nom);
+  showScreen('s-merchant-dash');
+}
+
+function showPendingValidation(clientData){
+  pendingClient=clientData;selectedPalier=null;
+  const paliers=getPaliers();
+  document.getElementById('pending-scan').innerHTML=`
+    <div class="validate-box">
+      <div class="validate-title"><div class="validate-pulse"></div>Validation en attente</div>
+      <div class="validate-client">
+        <div class="validate-avatar">${(clientData.prenom||'?')[0].toUpperCase()}</div>
+        <div><div style="font-size:14px;font-weight:600">${clientData.prenom} ${clientData.nom}</div>
+        <div style="font-size:12px;color:var(--gray)">${clientData.email} · ${clientData.points||0} pts actuels</div></div>
+      </div>
+      <p class="section-title">Montant de l'achat</p>
+      <div class="paliers-grid">${paliers.map((p,i)=>`
+        <div class="palier-btn" id="palier-${i}" onclick="selectPalier(${i})">
+          <div class="palier-emoji">${p.emoji}</div><div class="palier-range">${p.range}</div>
+          <div class="palier-pts" style="color:${p.color}">+${p.pts} pts</div>
+          <div class="palier-desc">${p.label}</div></div>`).join('')}</div>
+      <div class="pts-preview">
+        <div><div style="font-size:12px;color:var(--gray)">Points à créditer</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:2px" id="pts-preview-range">Sélectionnez un palier</div></div>
+        <div style="text-align:right">
+          <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--gold)" id="pts-preview-num">—</div>
+          <div style="font-size:10px;color:var(--gray)" id="pts-preview-total"></div></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm btn-success" id="btn-val" style="flex:1;padding:11px" onclick="validateVisit()" disabled>✓ Valider et créditer</button>
+        <button class="btn-sm btn-danger" style="padding:11px" onclick="rejectVisit()">✕</button>
+      </div>
+    </div>`;
+}
+
+function selectPalier(i){
+  selectedPalier=i;
+  document.querySelectorAll('.palier-btn').forEach((b,j)=>b.classList.toggle('selected',j===i));
+  const p=getPaliers()[i];
+  document.getElementById('pts-preview-range').textContent=p.emoji+' '+p.label+' · '+p.range;
+  document.getElementById('pts-preview-num').textContent='+'+p.pts;
+  document.getElementById('pts-preview-total').textContent='Total après : '+((pendingClient?.points||0)+p.pts)+' pts';
+  document.getElementById('btn-val').disabled=false;
+}
+
+async function validateVisit(){
+  if(selectedPalier===null||!pendingClient)return;
+  const p=getPaliers()[selectedPalier];
+  document.getElementById('btn-val').disabled=true;
+  try{
+    await apiPost({action:'addPoints',email:pendingClient.email,commerce_id:currentMerchant.commerce_id,points:p.pts,palier:p.emoji+' '+p.label});
+    showNotif(p.emoji+' +'+p.pts+' pts crédités ✓');
+    document.querySelector('.validate-box').style.opacity='0.3';
+    document.querySelector('.validate-box').style.pointerEvents='none';
+    await loadMerchantClients();
+  }catch(e){showNotif('Erreur',true);}
+}
+function rejectVisit(){showNotif('Visite refusée',true);document.querySelector('.validate-box').style.opacity='0.3';document.querySelector('.validate-box').style.pointerEvents='none';}
+
+function renderDB(){
+  const q=(document.getElementById('db-search').value||'').toLowerCase();
+  let rows=[...merchantClients];
+  if(q)rows=rows.filter(r=>(r.nom||'').toLowerCase().includes(q)||(r.email||'').toLowerCase().includes(q)||(r.prenom||'').toLowerCase().includes(q));
+  rows.sort((a,b)=>{let va=a[dbSortKey]||'',vb=b[dbSortKey]||'';if(typeof va==='string'){va=va.toLowerCase();vb=vb.toLowerCase();}return dbSortAsc?(va>vb?1:-1):(va<vb?1:-1);});
+  document.getElementById('db-body').innerHTML=rows.length?rows.map(r=>`<tr>
+    <td style="font-weight:500">${r.prenom||''} ${r.nom||''}</td>
+    <td style="color:var(--gray);font-size:12px">${r.email}</td>
+    <td><span style="font-family:'DM Serif Display',serif;font-size:16px;color:var(--gold)">${r.points}</span></td>
+    <td><span class="db-badge">${r.visites} visite${r.visites>1?'s':''}</span></td>
+    <td style="color:var(--gray);font-size:11px">${r.dernierScan||'—'}</td></tr>`).join('')
+    :'<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:20px;font-size:13px">Aucun client trouvé</td></tr>';
+  const total=rows.reduce((s,r)=>s+r.points,0);
+  document.getElementById('db-count').textContent=rows.length+' client'+(rows.length>1?'s':'');
+  document.getElementById('db-total-pts').textContent='Total : '+total+' pts';
+}
+function sortDB(key){if(dbSortKey===key)dbSortAsc=!dbSortAsc;else{dbSortKey=key;dbSortAsc=true;}renderDB();}
+function exportCSV(){
+  const blob=new Blob(['Prénom,Nom,Email,Points,Visites,Dernier scan\n'+merchantClients.map(r=>`${r.prenom||''},${r.nom||''},${r.email},${r.points},${r.visites},${r.dernierScan||''}`).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='clients.csv';a.click();showNotif('CSV téléchargé ⬇');
+}
+
+function getPaliers(){try{const s=localStorage.getItem('paliers_'+(currentMerchant?.commerce_id||'x'));if(s)return JSON.parse(s);}catch(e){}return PALIERS_DEFAULT;}
+function savePaliers(){
+  const p=getPaliers().map((p,i)=>({...p,range:document.getElementById('pc-range-'+i)?.value||p.range,pts:parseInt(document.getElementById('pc-pts-'+i)?.value)||p.pts,label:document.getElementById('pc-label-'+i)?.value||p.label}));
+  try{localStorage.setItem('paliers_'+currentMerchant.commerce_id,JSON.stringify(p));}catch(e){}
+  renderPaliersPreview();showNotif('Paliers enregistrés ✓');
+}
+function renderPaliersConfig(){
+  const p=getPaliers();
+  document.getElementById('paliers-config').innerHTML=p.map((p,i)=>`
+    <div class="palier-config">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:18px">${p.emoji}</span><span style="font-size:12px;color:var(--gray)">${p.label}</span></div>
+      <div class="palier-config-fields">
+        <div class="mini-field"><label>Tranche</label><input type="text" id="pc-range-${i}" value="${p.range}"/></div>
+        <div class="mini-field"><label>Points</label><input type="number" id="pc-pts-${i}" value="${p.pts}"/></div>
+        <div class="mini-field"><label>Label</label><input type="text" id="pc-label-${i}" value="${p.label}"/></div>
+      </div></div>`).join('');
+  renderPaliersPreview();
+}
+function renderPaliersPreview(){
+  document.getElementById('paliers-preview').innerHTML=getPaliers().map(p=>`
+    <div class="palier-btn"><div class="palier-emoji">${p.emoji}</div><div class="palier-range">${p.range}</div>
+    <div class="palier-pts" style="color:${p.color}">+${p.pts} pts</div><div class="palier-desc">${p.label}</div></div>`).join('');
+}
+
+function renderPromos(){
+  document.getElementById('promo-list').innerHTML=promos.length?promos.map((p,i)=>`
+    <div class="promo-card ${p.active?'promo-active':''}">
+      <span class="promo-badge ${p.active?'promo-badge-on':'promo-badge-off'}">${p.active?'● Active':'○ Inactive'}</span>
+      <div style="font-size:14px;font-weight:600;margin-bottom:3px">${p.titre}</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:10px">${p.desc}${p.cond>0?' · Dès '+p.cond+' pts':''}</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm ${p.active?'btn-danger':'btn-success'}" onclick="togglePromo(${i})">${p.active?'Désactiver':'Activer'}</button>
+        <button class="btn-sm btn-blue" onclick="deletePromo(${i})">Supprimer</button>
+      </div></div>`).join('')
+    :'<div style="text-align:center;color:var(--gray);font-size:13px;padding:16px 0">Aucune promotion créée.</div>';
+}
+function togglePromo(i){promos[i].active=!promos[i].active;renderPromos();showNotif('Mise à jour ✓');}
+function deletePromo(i){promos.splice(i,1);renderPromos();showNotif('Supprimée');}
+function addPromo(){
+  const titre=document.getElementById('promo-titre').value.trim();
+  if(!titre){showNotif('Ajoutez un titre',true);return;}
+  promos.push({titre,desc:document.getElementById('promo-desc-inp').value.trim(),cond:parseInt(document.getElementById('promo-cond').value),active:true});
+  document.getElementById('promo-titre').value='';document.getElementById('promo-desc-inp').value='';
+  renderPromos();showNotif('Promotion créée ✓');
+}
+
+function previewEmail(){
+  const subject=document.getElementById('email-subject').value.trim(),body=document.getElementById('email-body').value.trim();
+  if(!subject||!body){showNotif('Remplissez l\'objet et le message',true);return;}
+  const target=document.getElementById('email-target').value;
+  const filtered=target==='all'?merchantClients:merchantClients.filter(c=>c.points>=parseInt(target));
+  document.getElementById('ep-from').textContent=currentMerchant.nom;
+  document.getElementById('ep-to').textContent=filtered.length+' client'+(filtered.length>1?'s':'');
+  document.getElementById('ep-subject').textContent=subject;
+  document.getElementById('ep-body').innerHTML='<p>'+body.replace(/\{prénom\}/g,'<span style="color:var(--gold);font-weight:600">[Prénom]</span>').replace(/\n/g,'<br>')+'</p>';
+  document.getElementById('email-preview-panel').style.display='block';
+}
+function sendEmail(){showNotif('Emails envoyés ✉️');document.getElementById('email-preview-panel').style.display='none';}
+
+function generateQR(){
+  if(qrGenerated)return;
+  document.getElementById('qr-commerce-name').textContent='🏪 '+currentMerchant.nom;
+  document.getElementById('qr-url').textContent='fidelitemc.com/scan/'+currentMerchant.commerce_id;
+  const canvas=document.getElementById('qr-canvas'),ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,160,160);ctx.fillStyle='#0A1628';
+  const cell=7,pat=[[1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,0,1],[1,0,0,0,0,0,1,0,0,1,0,1,1,0,0,0,0,0,1,0,0],[1,0,1,1,1,0,1,0,1,0,1,0,1,0,1,1,1,0,1,0,1],[1,0,1,1,1,0,1,0,0,1,1,1,1,0,1,1,1,0,1,0,0],[1,0,1,1,1,0,1,0,1,1,0,0,1,0,1,1,1,0,1,0,1],[1,0,0,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,0],[1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,0,1],[0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,1],[1,0,1,1,0,1,1,1,0,1,1,0,1,1,0,1,1,1,0,1,0],[0,1,0,0,1,0,0,0,1,0,0,1,0,1,1,0,0,0,1,0,1],[1,1,1,0,1,1,1,1,0,1,0,0,1,0,1,1,1,0,1,1,0],[0,0,1,1,0,0,0,1,1,0,1,1,0,1,0,0,1,1,0,0,1],[1,1,1,1,1,0,1,0,0,1,1,0,1,1,1,0,1,1,1,1,0],[0,0,0,0,0,0,0,0,1,1,0,1,0,1,0,0,0,1,0,0,1],[1,1,1,1,1,1,1,0,0,0,1,0,1,0,1,0,1,0,1,1,0],[1,0,0,0,0,0,1,0,1,1,0,1,1,1,0,1,0,1,0,0,1],[1,0,1,1,1,0,1,1,0,1,1,0,1,0,1,1,1,0,1,1,0],[1,0,1,1,1,0,1,0,1,0,0,1,0,1,0,0,1,1,0,0,1],[1,0,1,1,1,0,1,0,0,1,1,0,1,0,1,0,1,0,1,1,0],[1,0,0,0,0,0,1,0,1,1,0,1,1,1,0,1,0,1,0,0,1],[1,1,1,1,1,1,1,0,0,0,1,0,1,0,1,0,1,0,1,1,0]];
+  pat.forEach((row,r)=>row.forEach((v,c)=>{if(v)ctx.fillRect(c*cell+4,r*cell+4,cell-1,cell-1)}));
+  qrGenerated=true;
+}
+function downloadQR(){const a=document.createElement('a');a.download='qrcode.png';a.href=document.getElementById('qr-canvas').toDataURL();a.click();showNotif('Téléchargé ⬇');}
+function logout(){currentMerchant=null;merchantClients=[];showScreen('s-merchant-login');}
+</script>
+</body>
+</html>
