@@ -176,7 +176,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     <div style="font-size:50px;margin-bottom:16px">🎉</div>
     <p style="font-family:'DM Serif Display',serif;font-size:26px;color:var(--white);margin-bottom:8px">Points crédités !</p>
     <p style="font-size:13px;color:var(--gray);margin-bottom:24px" id="credited-msg"></p>
-    <button class="btn btn-gold" onclick="showScreen('s-scan')">Voir mon portefeuille →</button>
+    <button class="btn btn-gold" onclick="goToWallet()">Voir mon portefeuille →</button>
   </div>
 </div>
 
@@ -753,6 +753,14 @@ function downloadQR(){
     const img=document.querySelector('#qr-box img');
     if(img){const a=document.createElement('a');a.download='qrcode-'+currentMerchant.commerce_id+'.png';a.href=img.src;a.click();showNotif('QR code téléchargé ⬇');}
   },300);
+}
+
+async function goToWallet(){
+  if(currentUser){
+    await renderWallet(currentUser, null);
+  } else {
+    showScreen('s-scan');
+  }
 }
 
 function logout(){
