@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--gold:#C9A96E;--gold-light:#E8D5A3;--gold-dark:#8B6914;--navy:#0A1628;--navy-mid:#1A2E4A;--white:#FAFAF7;--gray:#8A9BB0;--success:#2ECC8A;--danger:#E85555;}
+:root{--gold:#C9A96E;--gold-light:#E8D5A3;--navy:#0A1628;--navy-mid:#1A2E4A;--white:#FAFAF7;--gray:#8A9BB0;--success:#2ECC8A;--danger:#E85555;}
 body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid rgba(201,169,110,0.15)}
 .logo{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold)}
@@ -87,7 +87,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .email-preview-header{font-size:11px;color:var(--gray);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06)}
 .qr-wrap{text-align:center;padding:16px 0}
 .qr-box{display:inline-block;background:#fff;padding:16px;border-radius:16px;margin-bottom:14px}
-.qr-box img{display:block}
 .qr-instructions{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px}
 .qr-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
 .qr-step:last-child{margin-bottom:0}
@@ -112,9 +111,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .mini-field input{width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none}
 .mini-field input:focus{border-color:var(--gold)}
 .commerce-banner{background:linear-gradient(135deg,rgba(201,169,110,0.15),rgba(201,169,110,0.05));border:1px solid rgba(201,169,110,0.25);border-radius:12px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px}
-.commerce-banner-icon{font-size:24px}
-.commerce-banner-name{font-size:15px;font-weight:600;color:var(--white)}
-.commerce-banner-type{font-size:11px;color:var(--gray)}
+.scan-en-attente{background:rgba(201,169,110,0.06);border:1px solid rgba(201,169,110,0.2);border-radius:14px;padding:20px;text-align:center;margin-top:8px}
 .notif{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--success);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:600;transition:transform .3s;z-index:999;white-space:nowrap}
 .notif.show{transform:translateX(-50%) translateY(0)}
 </style>
@@ -132,10 +129,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 <!-- CLIENT: EMAIL -->
 <div id="s-scan" class="screen active">
   <div id="commerce-banner" style="display:none" class="commerce-banner">
-    <div class="commerce-banner-icon" id="banner-icon">🏪</div>
+    <div style="font-size:24px" id="banner-icon">🏪</div>
     <div>
-      <div class="commerce-banner-name" id="banner-name"></div>
-      <div class="commerce-banner-type" id="banner-type"></div>
+      <div style="font-size:15px;font-weight:600;color:var(--white)" id="banner-name"></div>
+      <div style="font-size:11px;color:var(--gray)" id="banner-type"></div>
     </div>
   </div>
   <p class="screen-title">Bienvenue 👋</p>
@@ -144,7 +141,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     <div class="field"><label>Votre email</label><input type="email" id="email-input" placeholder="prenom@email.com"/></div>
     <button class="btn btn-gold" id="btn-continue" onclick="handleEmailSubmit()">Continuer →</button>
   </div>
-  <p style="font-size:11px;color:var(--gray);text-align:center;margin-top:6px">Programme de fidélité FidèleMC</p>
 </div>
 
 <!-- CLIENT: INSCRIPTION -->
@@ -161,6 +157,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     </div>
     <button class="btn btn-gold" id="btn-register" onclick="handleRegister()">Rejoindre le programme</button>
     <button class="btn btn-outline" onclick="showScreen('s-scan')">← Retour</button>
+  </div>
+</div>
+
+<!-- CLIENT: EN ATTENTE DE VALIDATION -->
+<div id="s-waiting" class="screen">
+  <div class="scan-en-attente">
+    <div style="font-size:40px;margin-bottom:16px">⏳</div>
+    <p style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--white);margin-bottom:8px">En attente de validation</p>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.5">Le commerçant va valider votre visite et créditer vos points dans quelques instants.</p>
+    <div class="loading" style="justify-content:center"><div class="spinner"></div><span>En attente...</span></div>
+  </div>
+</div>
+
+<!-- CLIENT: POINTS CRÉDITÉS -->
+<div id="s-credited" class="screen">
+  <div style="text-align:center;padding:30px 0">
+    <div style="font-size:50px;margin-bottom:16px">🎉</div>
+    <p style="font-family:'DM Serif Display',serif;font-size:26px;color:var(--white);margin-bottom:8px">Points crédités !</p>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:24px" id="credited-msg"></p>
+    <button class="btn btn-gold" onclick="showScreen('s-scan')">Voir mon portefeuille →</button>
   </div>
 </div>
 
@@ -209,8 +225,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   </div>
   <div id="dash-home">
     <div class="stats-row" id="dash-stats"></div>
-    <div id="pending-scan"><p style="font-size:13px;color:var(--gray);margin-bottom:16px">Aucun scan en attente.</p></div>
-    <p class="section-title">3 derniers scans</p>
+    <div id="pending-scan"><p style="font-size:13px;color:var(--gray)">Aucun scan en attente.</p></div>
+    <p class="section-title" style="margin-top:16px">3 derniers scans</p>
     <div id="dash-recent"></div>
   </div>
   <div id="dash-db" style="display:none">
@@ -281,16 +297,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <div class="qr-wrap">
         <p style="font-size:14px;font-weight:600;color:var(--white);margin-bottom:4px" id="qr-commerce-name"></p>
         <p style="font-size:11px;color:var(--gold);margin-bottom:14px;font-family:monospace" id="qr-url-display"></p>
-        <div class="qr-box" id="qr-box"></div>
-        <br>
+        <div class="qr-box" id="qr-box"></div><br>
         <button class="btn-sm btn-blue" onclick="downloadQR()" style="margin-top:12px">⬇ Télécharger le QR code</button>
       </div>
       <div class="qr-instructions">
         <p class="section-title">Comment l'utiliser</p>
         <div class="qr-step"><div class="qr-num">1</div><div class="qr-step-text"><strong>Imprimez</strong> et placez sur votre comptoir</div></div>
-        <div class="qr-step"><div class="qr-num">2</div><div class="qr-step-text">Le client <strong>scanne</strong> → arrive directement sur la page de fidélité</div></div>
-        <div class="qr-step"><div class="qr-num">3</div><div class="qr-step-text">Il entre son email → vous <strong>validez</strong> et sélectionnez le palier</div></div>
-        <div class="qr-step"><div class="qr-num">4</div><div class="qr-step-text">Points crédités dans le <strong>Sheets automatiquement</strong></div></div>
+        <div class="qr-step"><div class="qr-num">2</div><div class="qr-step-text">Le client <strong>scanne</strong> → arrive directement sur la page fidélité</div></div>
+        <div class="qr-step"><div class="qr-num">3</div><div class="qr-step-text">Il entre son email → une <strong>notification apparaît</strong> ici</div></div>
+        <div class="qr-step"><div class="qr-num">4</div><div class="qr-step-text">Vous <strong>validez</strong> → points crédités automatiquement</div></div>
       </div>
     </div>
   </div>
@@ -314,9 +329,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 const API = 'https://script.google.com/macros/s/AKfycbynPCew20k86sNz9xQ35vvzuxMnPKouxtPamP3EypX51ACdPAZpcY-0-GHBX4la2Zk2/exec';
 const BASE_URL = 'https://liliang03-lil.github.io/Fidelitemc/';
 
-let currentUser=null, currentMerchant=null, pendingClient=null, selectedPalier=null;
+let currentUser=null, currentMerchant=null, selectedPalier=null;
 let merchantClients=[], dbSortKey='nom', dbSortAsc=true, qrGenerated=false;
 let scanCommerceId=null, scanCommerceData=null;
+let pendingScanIndex=null, pendingScanEmail=null;
+let pollInterval=null, waitInterval=null;
 const promos=[];
 const PALIERS_DEFAULT=[
   {emoji:'🟡',label:'Petit achat',range:'1 – 10 €',pts:15,color:'#C9A96E'},
@@ -326,17 +343,16 @@ const PALIERS_DEFAULT=[
 ];
 
 // ============================================================
-// DÉTECTION QR CODE — lecture du paramètre ?commerce=xxx
+// INIT — détection QR code via URL
 // ============================================================
 async function initFromURL(){
   const params = new URLSearchParams(window.location.search);
   const commerceId = params.get('commerce');
   if(commerceId){
-    // Mode client via QR code — cacher l'onglet commerçant
     document.getElementById('nav-tabs').style.display='none';
     scanCommerceId = commerceId;
     try{
-      const data = await apiGet({action:'getCommercant',email:'_lookup_',password:'_lookup_',commerce_id:commerceId});
+      const data = await apiGet({action:'getCommercant',email:'x',password:'x',commerce_id:commerceId});
       if(data && data.nom){
         scanCommerceData = data;
         document.getElementById('commerce-banner').style.display='flex';
@@ -369,14 +385,8 @@ function setLoading(id,on,txt=''){
   const b=document.getElementById(id);if(!b)return;b.disabled=on;
   b.innerHTML=on?'<span style="display:flex;align-items:center;justify-content:center;gap:8px"><span class="spinner"></span>Chargement...</span>':txt;
 }
-async function apiGet(p){
-  const r=await fetch(API+'?'+new URLSearchParams(p),{redirect:'follow'});
-  return r.json();
-}
-async function apiPost(d){
-  const r=await fetch(API,{method:'POST',body:JSON.stringify(d),headers:{'Content-Type':'text/plain'}});
-  return r.json();
-}
+async function apiGet(p){const r=await fetch(API+'?'+new URLSearchParams(p),{redirect:'follow'});return r.json();}
+async function apiPost(d){const r=await fetch(API,{method:'POST',body:JSON.stringify(d),headers:{'Content-Type':'text/plain'}});return r.json();}
 
 // ============================================================
 // CLIENT
@@ -384,11 +394,29 @@ async function apiPost(d){
 async function handleEmailSubmit(){
   const email=document.getElementById('email-input').value.trim().toLowerCase();
   if(!email||!email.includes('@')){showNotif('Email invalide',true);return;}
-  currentUser=email;setLoading('btn-continue',true);
+  currentUser=email;
+  setLoading('btn-continue',true);
   try{
     const data=await apiGet({action:'getClient',email});
-    if(data.found) await renderWallet(email,data);
-    else showScreen('s-register');
+    if(scanCommerceId){
+      // Mode QR code — créer un scan en attente
+      const prenom = data.found ? data.prenom : '';
+      const nom = data.found ? data.nom : '';
+      if(!data.found){
+        // Nouveau client — inscription d'abord
+        showScreen('s-register');
+        setLoading('btn-continue',false,'Continuer →');
+        return;
+      }
+      // Client existant — créer scan et attendre validation
+      await apiPost({action:'createScan',email,commerce_id:scanCommerceId,prenom,nom});
+      showScreen('s-waiting');
+      startWaitingForValidation(email);
+    } else {
+      // Mode normal — afficher portefeuille
+      if(data.found) await renderWallet(email,data);
+      else showScreen('s-register');
+    }
   }catch(e){showNotif('Erreur : '+e.message,true);}
   setLoading('btn-continue',false,'Continuer →');
 }
@@ -402,10 +430,38 @@ async function handleRegister(){
   setLoading('btn-register',true);
   try{
     const res=await apiPost({action:'createClient',email:currentUser,prenom,nom,telephone});
-    if(res.created){showNotif('Compte créé ! Bienvenue 🎉');await renderWallet(currentUser,{prenom,programmes:[]});}
-    else showNotif(res.message||'Erreur',true);
+    if(res.created){
+      if(scanCommerceId){
+        // Après inscription via QR — créer scan et attendre
+        await apiPost({action:'createScan',email:currentUser,commerce_id:scanCommerceId,prenom,nom});
+        showScreen('s-waiting');
+        startWaitingForValidation(currentUser);
+      } else {
+        showNotif('Compte créé ! Bienvenue 🎉');
+        await renderWallet(currentUser,{prenom,programmes:[]});
+      }
+    } else showNotif(res.message||'Erreur',true);
   }catch(e){showNotif('Erreur : '+e.message,true);}
   setLoading('btn-register',false,'Rejoindre le programme');
+}
+
+// Polling côté client — vérifie toutes les 5 secondes si le scan a été validé
+function startWaitingForValidation(email){
+  if(waitInterval) clearInterval(waitInterval);
+  waitInterval = setInterval(async()=>{
+    try{
+      const data = await apiGet({action:'getClient',email});
+      if(data.found && data.programmes){
+        const prog = data.programmes.find(p=>p.commerce_id===scanCommerceId);
+        if(prog && prog.visites > 0){
+          clearInterval(waitInterval);
+          document.getElementById('credited-msg').textContent =
+            'Vous avez gagné des points chez '+(scanCommerceData?.nom||scanCommerceId)+' ! Total : '+prog.points+' pts';
+          showScreen('s-credited');
+        }
+      }
+    }catch(e){}
+  }, 5000);
 }
 
 async function renderWallet(email,data){
@@ -420,10 +476,7 @@ async function renderWallet(email,data){
   document.getElementById('wallet-total').textContent=total;
   document.getElementById('wallet-programs').textContent=programmes.length+' programme'+(programmes.length>1?'s':'')+' actif'+(programmes.length>1?'s':'');
   const list=document.getElementById('commerce-list');list.innerHTML='';
-  if(!programmes.length){
-    list.innerHTML='<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px 0">Aucun programme actif.<br>Scannez un QR code !</div>';
-    return;
-  }
+  if(!programmes.length){list.innerHTML='<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px 0">Aucun programme actif.<br>Scannez un QR code !</div>';return;}
   programmes.forEach(p=>{
     const reward=p.reward||500,pct=Math.min((p.points/reward)*100,100);
     const d=document.createElement('div');d.className='commerce-card';d.onclick=()=>renderDetail(p);
@@ -432,9 +485,8 @@ async function renderWallet(email,data){
         <div style="width:38px;height:38px;border-radius:10px;background:rgba(201,169,110,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;margin-right:10px">🏪</div>
         <div><div style="font-size:14px;font-weight:600;color:var(--white)">${p.commerce_nom||p.commerce_id}</div>
         <div style="font-size:11px;color:var(--gray)">${p.visites} visite${p.visites>1?'s':''}</div></div></div>
-      <div style="text-align:right">
-        <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold)">${p.points}</div>
-        <div style="font-size:10px;color:var(--gray)">pts</div></div></div>
+      <div style="text-align:right"><div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold)">${p.points}</div>
+      <div style="font-size:10px;color:var(--gray)">pts</div></div></div>
       <div class="commerce-bar-wrap"><div class="commerce-bar" style="width:${pct}%;background:var(--gold)"></div></div>
       <div style="font-size:10px;color:var(--gray);margin-top:4px">Encore <span style="color:var(--gold)">${Math.max(reward-p.points,0)} pts</span> pour la récompense</div>`;
     list.appendChild(d);
@@ -481,12 +533,26 @@ async function renderMerchantDash(){
   document.getElementById('dash-sub').textContent=currentMerchant.type||'';
   document.getElementById('dash-stats').innerHTML='<div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Chargement...</div>';
   await loadMerchantClients();
+  updateStats();
+  updateRecentScans();
+  renderPromos();
+  startPollingScans();
+  document.querySelectorAll('.m-nav-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  ['dash-home','dash-db','dash-promos','dash-email','dash-qr','dash-settings'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'block':'none');
+  showNotif('Connecté : '+currentMerchant.nom);
+  showScreen('s-merchant-dash');
+}
+
+function updateStats(){
   const totalV=merchantClients.reduce((s,c)=>s+(c.visites||0),0);
   const totalP=merchantClients.reduce((s,c)=>s+(c.points||0),0);
   document.getElementById('dash-stats').innerHTML=`
     <div class="stat-card"><div class="stat-num">${merchantClients.length}</div><div class="stat-lbl">Clients</div></div>
     <div class="stat-card"><div class="stat-num">${totalV}</div><div class="stat-lbl">Visites</div></div>
     <div class="stat-card"><div class="stat-num">${totalP}</div><div class="stat-lbl">Pts donnés</div></div>`;
+}
+
+function updateRecentScans(){
   const sorted=[...merchantClients].sort((a,b)=>new Date(b.dernierScan||0)-new Date(a.dernierScan||0)).slice(0,3);
   document.getElementById('dash-recent').innerHTML=sorted.length?sorted.map(c=>`
     <div class="recent-card">
@@ -495,28 +561,43 @@ async function renderMerchantDash(){
         <div><div style="font-size:13px;font-weight:600">${c.prenom} ${c.nom}</div>
         <div style="font-size:11px;color:var(--gray)">${c.email}</div></div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:11px;color:var(--gold)">${c.dernierScan||'—'}</div>
-        <div style="font-size:11px;color:var(--gray)">${c.points} pts</div>
-      </div>
+      <div style="text-align:right"><div style="font-size:11px;color:var(--gold)">${c.dernierScan||'—'}</div>
+      <div style="font-size:11px;color:var(--gray)">${c.points} pts</div></div>
     </div>`).join(''):'<div style="color:var(--gray);font-size:13px;text-align:center;padding:16px 0">Aucun scan encore.</div>';
-  renderPromos();
-  document.querySelectorAll('.m-nav-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
-  ['dash-home','dash-db','dash-promos','dash-email','dash-qr','dash-settings'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'block':'none');
-  showNotif('Connecté : '+currentMerchant.nom);
-  showScreen('s-merchant-dash');
 }
 
-function showPendingValidation(clientData){
-  pendingClient=clientData;selectedPalier=null;
+// Polling côté commerçant — vérifie les scans en attente toutes les 5 secondes
+function startPollingScans(){
+  if(pollInterval) clearInterval(pollInterval);
+  checkPendingScans();
+  pollInterval = setInterval(checkPendingScans, 5000);
+}
+
+async function checkPendingScans(){
+  try{
+    const data = await apiGet({action:'getPendingScans',commerce_id:currentMerchant.commerce_id});
+    const scans = data.scans||[];
+    if(scans.length > 0){
+      const scan = scans[0];
+      pendingScanIndex = scan.index;
+      pendingScanEmail = scan.email;
+      showValidationBox(scan);
+    } else {
+      document.getElementById('pending-scan').innerHTML='<p style="font-size:13px;color:var(--gray)">Aucun scan en attente.</p>';
+    }
+  }catch(e){}
+}
+
+function showValidationBox(scan){
+  selectedPalier=null;
   const paliers=getPaliers();
   document.getElementById('pending-scan').innerHTML=`
     <div class="validate-box">
-      <div class="validate-title"><div class="validate-pulse"></div>Validation en attente</div>
+      <div class="validate-title"><div class="validate-pulse"></div>Scan en attente · <span style="font-weight:400;color:var(--gray)">${scan.date}</span></div>
       <div class="validate-client">
-        <div class="validate-avatar">${(clientData.prenom||'?')[0].toUpperCase()}</div>
-        <div><div style="font-size:14px;font-weight:600">${clientData.prenom} ${clientData.nom}</div>
-        <div style="font-size:12px;color:var(--gray)">${clientData.email} · ${clientData.points||0} pts actuels</div></div>
+        <div class="validate-avatar">${(scan.prenom||'?')[0].toUpperCase()}</div>
+        <div><div style="font-size:14px;font-weight:600;color:var(--white)">${scan.prenom} ${scan.nom}</div>
+        <div style="font-size:12px;color:var(--gray)">${scan.email}</div></div>
       </div>
       <p class="section-title">Montant de l'achat</p>
       <div class="paliers-grid">${paliers.map((p,i)=>`
@@ -533,7 +614,7 @@ function showPendingValidation(clientData){
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn-sm btn-success" id="btn-val" style="flex:1;padding:11px" onclick="validateVisit()" disabled>✓ Valider et créditer</button>
-        <button class="btn-sm btn-danger" style="padding:11px" onclick="rejectVisit()">✕</button>
+        <button class="btn-sm btn-danger" style="padding:11px" onclick="rejectVisit()">✕ Refuser</button>
       </div>
     </div>`;
 }
@@ -544,26 +625,31 @@ function selectPalier(i){
   const p=getPaliers()[i];
   document.getElementById('pts-preview-range').textContent=p.emoji+' '+p.label+' · '+p.range;
   document.getElementById('pts-preview-num').textContent='+'+p.pts;
-  document.getElementById('pts-preview-total').textContent='Total après : '+((pendingClient?.points||0)+p.pts)+' pts';
   document.getElementById('btn-val').disabled=false;
 }
 
 async function validateVisit(){
-  if(selectedPalier===null||!pendingClient)return;
+  if(selectedPalier===null||!pendingScanIndex)return;
   const p=getPaliers()[selectedPalier];
   document.getElementById('btn-val').disabled=true;
   try{
-    await apiPost({action:'addPoints',email:pendingClient.email,commerce_id:currentMerchant.commerce_id,points:p.pts,palier:p.emoji+' '+p.label});
+    await apiPost({action:'updateScan',index:pendingScanIndex,statut:'validé'});
+    await apiPost({action:'addPoints',email:pendingScanEmail,commerce_id:currentMerchant.commerce_id,points:p.pts,palier:p.emoji+' '+p.label});
     showNotif(p.emoji+' +'+p.pts+' pts crédités ✓');
     document.querySelector('.validate-box').style.opacity='0.3';
     document.querySelector('.validate-box').style.pointerEvents='none';
+    document.querySelector('.validate-title').innerHTML='✓ Visite validée · '+p.emoji+' '+p.label;
     await loadMerchantClients();
+    updateStats();
+    updateRecentScans();
   }catch(e){showNotif('Erreur',true);}
 }
-function rejectVisit(){
+
+async function rejectVisit(){
+  if(!pendingScanIndex)return;
+  await apiPost({action:'updateScan',index:pendingScanIndex,statut:'refusé'});
   showNotif('Visite refusée',true);
-  document.querySelector('.validate-box').style.opacity='0.3';
-  document.querySelector('.validate-box').style.pointerEvents='none';
+  document.getElementById('pending-scan').innerHTML='<p style="font-size:13px;color:var(--gray)">Aucun scan en attente.</p>';
 }
 
 // DB
@@ -651,22 +737,15 @@ function previewEmail(){
 }
 function sendEmail(){showNotif('Emails envoyés ✉️');document.getElementById('email-preview-panel').style.display='none';}
 
-// QR CODE — vrai QR généré avec qrcodejs
+// QR CODE
 function generateQR(){
   if(qrGenerated)return;
-  const commerceId = currentMerchant.commerce_id;
-  const qrUrl = BASE_URL+'?commerce='+commerceId;
+  const commerceId=currentMerchant.commerce_id;
+  const qrUrl=BASE_URL+'?commerce='+commerceId;
   document.getElementById('qr-commerce-name').textContent='🏪 '+currentMerchant.nom;
   document.getElementById('qr-url-display').textContent=qrUrl;
   document.getElementById('qr-box').innerHTML='';
-  new QRCode(document.getElementById('qr-box'),{
-    text: qrUrl,
-    width: 180,
-    height: 180,
-    colorDark: '#0A1628',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
-  });
+  new QRCode(document.getElementById('qr-box'),{text:qrUrl,width:180,height:180,colorDark:'#0A1628',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
   qrGenerated=true;
 }
 function downloadQR(){
@@ -676,9 +755,12 @@ function downloadQR(){
   },300);
 }
 
-function logout(){currentMerchant=null;merchantClients=[];showScreen('s-merchant-login');}
+function logout(){
+  if(pollInterval)clearInterval(pollInterval);
+  currentMerchant=null;merchantClients=[];
+  showScreen('s-merchant-login');
+}
 
-// INIT
 initFromURL();
 </script>
 </body>
