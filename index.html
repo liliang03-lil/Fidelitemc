@@ -241,6 +241,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <th onclick="sortDB('email')">Email ↕</th>
           <th onclick="sortDB('points')">Points ↕</th>
           <th onclick="sortDB('visites')">Visites ↕</th>
+          <th onclick="sortDB('panierMoyen')">Panier moyen ↕</th>
+          <th>Palier moyen</th>
           <th>Dernier scan</th>
         </tr></thead>
         <tbody id="db-body"></tbody>
@@ -663,6 +665,8 @@ function renderDB(){
     <td style="color:var(--gray);font-size:12px">${r.email}</td>
     <td><span style="font-family:'DM Serif Display',serif;font-size:16px;color:var(--gold)">${r.points}</span></td>
     <td><span class="db-badge">${r.visites} visite${r.visites>1?'s':''}</span></td>
+    <td style="font-weight:600;color:var(--white)">${r.panierMoyen>0?r.panierMoyen+'€':'—'}</td>
+    <td style="font-size:12px">${r.panierMoyen>0?(r.palierMoyen||'—'):'—'}</td>
     <td style="color:var(--gray);font-size:11px">${r.dernierScan||'—'}</td></tr>`).join('')
     :'<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:20px;font-size:13px">Aucun client trouvé</td></tr>';
   const total=rows.reduce((s,r)=>s+r.points,0);
