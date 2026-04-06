@@ -636,7 +636,8 @@ async function validateVisit(){
   document.getElementById('btn-val').disabled=true;
   try{
     await apiPost({action:'updateScan',index:pendingScanIndex,statut:'validé'});
-    await apiPost({action:'addPoints',email:pendingScanEmail,commerce_id:currentMerchant.commerce_id,points:p.pts,palier:p.emoji+' '+p.label});
+    const rangeStr=p.range||'';const nums=rangeStr.match(/d+/g);let montantEstime=0;if(nums&&nums.length>=2){montantEstime=Math.round((parseInt(nums[0])+parseInt(nums[1]))/2);}else if(nums&&nums.length===1){montantEstime=parseInt(nums[0])+10;}
+    await apiPost({action:'addPoints',email:pendingScanEmail,commerce_id:currentMerchant.commerce_id,points:p.pts,palier:p.emoji+' '+p.label,montant:montantEstime});
     showNotif(p.emoji+' +'+p.pts+' pts crédités ✓');
     document.querySelector('.validate-box').style.opacity='0.3';
     document.querySelector('.validate-box').style.pointerEvents='none';
