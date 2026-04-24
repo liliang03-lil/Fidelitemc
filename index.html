@@ -737,7 +737,7 @@ const CP_VILLES = {
   '06760': 'Péone', '06770': 'Sallagriffon', '06780': 'Roquesteron',
   '06790': 'Ascros', '06910': 'Roquesteron'
 };
-function getCityFromCP(cp){if(!cp)return '';const clean=cp.toString().trim().replace(/\s/g,'');return CP_VILLES[clean]||'';}
+function getCityFromCP(cp){if(!cp)return '';let clean=cp.toString().trim().replace(/\s/g,'');if(clean.length===4)clean='0'+clean;return CP_VILLES[clean]||'';}
 
 function renderDB(){
   const q=(document.getElementById('db-search').value||'').toLowerCase();
