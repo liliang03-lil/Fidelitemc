@@ -553,7 +553,7 @@ async function renderMerchantDash(){
   renderPromos();
   startPollingScans();
   document.querySelectorAll('.m-nav-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
-  ['dash-home','dash-db','dash-promos','dash-email','dash-qr','dash-settings'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'block':'none');
+  ['dash-home','dash-analytics','dash-db','dash-promos','dash-email','dash-qr','dash-settings'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'block':'none');
   showNotif('Connecté : '+currentMerchant.nom);
   showScreen('s-merchant-dash');
 }
@@ -601,7 +601,7 @@ function updateStats(){
       </div>
       <div class="card" style="padding:14px;text-align:center">
         <div style="font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Taux de retour</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${Math.round((clients.filter(c=>(c.visites||0)>=2).length/totalClients)*100)}%</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${merchantClients.length>0?Math.round((merchantClients.filter(c=>(c.visites||0)>=2).length/merchantClients.length)*100):0}%</div>
         <div style="font-size:10px;color:var(--gray);margin-top:2px">clients revenus 2+ fois</div>
       </div>
       <div class="card" style="padding:14px;text-align:center">
@@ -917,7 +917,7 @@ function renderAnalytics(){
       </div>
       <div class="card" style="padding:14px;text-align:center">
         <div style="font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Taux de retour</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${Math.round((clients.filter(c=>(c.visites||0)>=2).length/totalClients)*100)}%</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${merchantClients.length>0?Math.round((merchantClients.filter(c=>(c.visites||0)>=2).length/merchantClients.length)*100):0}%</div>
         <div style="font-size:10px;color:var(--gray);margin-top:2px">clients revenus 2+ fois</div>
       </div>
       <div class="card" style="padding:14px;text-align:center">
