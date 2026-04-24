@@ -737,7 +737,20 @@ const CP_VILLES = {
   '06760': 'Péone', '06770': 'Sallagriffon', '06780': 'Roquesteron',
   '06790': 'Ascros', '06910': 'Roquesteron'
 };
-function getCityFromCP(cp){if(!cp)return '';let clean=cp.toString().trim().replace(/\s/g,'');if(clean.length===4)clean='0'+clean;return CP_VILLES[clean]||'';}
+function getCityFromCP(cp){
+  if(!cp)return '';
+  let clean=cp.toString().trim().replace(/\s/g,'');
+  // Ajouter zéro manquant si 4 chiffres (ex: 6240 → 06240)
+  if(/^\d{4}$/.test(clean))clean='0'+clean;
+  return CP_VILLES[clean]||'';
+}
+function formatPhone(tel){
+  if(!tel)return '—';
+  let t=tel.toString().trim();
+  // Ajouter zéro si numéro français à 9 chiffres
+  if(/^\d{9}$/.test(t))t='0'+t;
+  return t;
+}
 
 function renderDB(){
   const q=(document.getElementById('db-search').value||'').toLowerCase();
@@ -747,7 +760,7 @@ function renderDB(){
   document.getElementById('db-body').innerHTML=rows.length?rows.map(r=>`<tr>
     <td style="font-weight:600;font-size:13px;white-space:nowrap">${r.prenom||''} ${r.nom||''}</td>
     <td style="color:var(--gray);font-size:11px">${r.email}</td>
-    <td style="color:var(--gray);font-size:12px">${r.telephone||'—'}</td>
+    <td style="color:var(--gray);font-size:12px">${formatPhone(r.telephone)}</td>
     <td style="font-size:12px;color:var(--white)">${r.codePostal||'—'}${getCityFromCP(r.codePostal||'')?`<br><span style="font-size:10px;color:var(--gray)">${getCityFromCP(r.codePostal)}</span>`:''}</td>
     <td><span style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold)">${r.points}</span></td>
     <td><span class="db-badge">${r.visites} visite${r.visites>1?'s':''}</span></td>
