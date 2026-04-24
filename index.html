@@ -317,12 +317,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   <div id="dash-settings" style="display:none">
     <div class="card">
       <p class="section-title">Configurer mes paliers</p>
+      <p style="font-size:11px;color:var(--gray);margin-bottom:14px">Ajoutez autant de paliers que vous souhaitez — tranche de prix ou prix unique.</p>
       <div id="paliers-config"></div>
+      <button class="btn btn-outline" style="margin-top:8px" onclick="addPalier()">+ Ajouter un palier</button>
       <button class="btn btn-gold" style="margin-top:8px" onclick="savePaliers()">Enregistrer</button>
     </div>
     <div class="card">
       <p class="section-title">Aperçu</p>
-      <div class="paliers-grid" id="paliers-preview" style="pointer-events:none"></div>
+      <div id="paliers-preview" style="display:flex;flex-wrap:wrap;gap:8px;pointer-events:none"></div>
     </div>
   </div>
   <button class="btn btn-outline" onclick="logout()" style="margin-top:4px">← Déconnexion</button>
@@ -779,28 +781,94 @@ function exportCSV(){
 }
 
 // PALIERS
-function getPaliers(){try{const s=localStorage.getItem('paliers_'+(currentMerchant?.commerce_id||'x'));if(s)return JSON.parse(s);}catch(e){}return PALIERS_DEFAULT;}
-function savePaliers(){
-  const p=getPaliers().map((p,i)=>({...p,range:document.getElementById('pc-range-'+i)?.value||p.range,pts:parseInt(document.getElementById('pc-pts-'+i)?.value)||p.pts,label:document.getElementById('pc-label-'+i)?.value||p.label}));
-  try{localStorage.setItem('paliers_'+currentMerchant.commerce_id,JSON.stringify(p));}catch(e){}
-  renderPaliersPreview();showNotif('Paliers enregistrés ✓');
+function getPaliers(){try{const s=localStorage.getItem('paliers_'+(currentMerchant?.commerce_id||'x'));if(s)return JSON.parse(s);}catch(e){}return JSON.parse(JSON.stringify(PALIERS_DEFAULT));}
+
+function addPalier(){
+  const paliers=getPaliers();
+  paliers.push({emoji:'🏷️',label:'Nouveau palier',range:'0 – 0 €',pts:10,color:'#C9A96E',type:'tranche'});
+  try{localStorage.setItem('paliers_'+currentMerchant.commerce_id,JSON.stringify(paliers));}catch(e){}
+  renderPaliersConfig();
+  showNotif('Palier ajouté ✓');
 }
+
+function deletePalier(i){
+  const paliers=getPaliers();
+  if(paliers.length<=1){showNotif('Il faut au moins 1 palier',true);return;}
+  paliers.splice(i,1);
+  try{localStorage.setItem('paliers_'+currentMerchant.commerce_id,JSON.stringify(paliers));}catch(e){}
+  renderPaliersConfig();
+  showNotif('Palier supprimé');
+}
+
+function savePaliers(){
+  const paliers=getPaliers();
+  const updated=paliers.map((p,i)=>{
+    const emoji=document.getElementById('pc-emoji-'+i)?.value||p.emoji;
+    const label=document.getElementById('pc-label-'+i)?.value||p.label;
+    const type=document.getElementById('pc-type-'+i)?.value||'tranche';
+    const range=document.getElementById('pc-range-'+i)?.value||p.range;
+    const pts=parseInt(document.getElementById('pc-pts-'+i)?.value)||p.pts;
+    const color=document.getElementById('pc-color-'+i)?.value||p.color;
+    return{...p,emoji,label,type,range,pts,color};
+  });
+  try{localStorage.setItem('paliers_'+currentMerchant.commerce_id,JSON.stringify(updated));}catch(e){}
+  renderPaliersConfig();
+  showNotif('Paliers enregistrés ✓');
+}
+
 function renderPaliersConfig(){
-  const p=getPaliers();
-  document.getElementById('paliers-config').innerHTML=p.map((p,i)=>`
-    <div class="palier-config">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:18px">${p.emoji}</span><span style="font-size:12px;color:var(--gray)">${p.label}</span></div>
-      <div class="palier-config-fields">
-        <div class="mini-field"><label>Tranche</label><input type="text" id="pc-range-${i}" value="${p.range}"/></div>
-        <div class="mini-field"><label>Points</label><input type="number" id="pc-pts-${i}" value="${p.pts}"/></div>
-        <div class="mini-field"><label>Label</label><input type="text" id="pc-label-${i}" value="${p.label}"/></div>
-      </div></div>`).join('');
+  const paliers=getPaliers();
+  const COLORS=['#C9A96E','#E8903A','#E85555','#9B59B6','#2ECC8A','#4A8ED4','#E91E8C','#FF6B35'];
+  document.getElementById('paliers-config').innerHTML=paliers.map((p,i)=>`
+    <div class="palier-config" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="text" id="pc-emoji-${i}" value="${p.emoji}" style="width:44px;padding:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--white);font-size:18px;text-align:center;font-family:'DM Sans',sans-serif"/>
+          <span style="font-size:12px;color:var(--gray)">Palier ${i+1}</span>
+        </div>
+        <button onclick="deletePalier(${i})" style="background:rgba(232,85,85,0.12);border:1px solid rgba(232,85,85,0.25);color:#E85555;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">✕ Supprimer</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div class="mini-field">
+          <label>Type</label>
+          <select id="pc-type-${i}" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px" onchange="renderPaliersConfig()">
+            <option value="tranche" ${(p.type||'tranche')==='tranche'?'selected':''}>Tranche de prix</option>
+            <option value="unique" ${p.type==='unique'?'selected':''}>Prix unique</option>
+          </select>
+        </div>
+        <div class="mini-field">
+          <label>${(p.type||'tranche')==='unique'?'Prix exact':'Tranche (ex: 10 – 30 €)'}</label>
+          <input type="text" id="pc-range-${i}" value="${p.range}" placeholder="${(p.type||'tranche')==='unique'?'Ex: 25 €':'Ex: 10 – 30 €'}" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px"/>
+        </div>
+        <div class="mini-field">
+          <label>Label / Catégorie</label>
+          <input type="text" id="pc-label-${i}" value="${p.label}" placeholder="Ex: Grand acheteur" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px"/>
+        </div>
+        <div class="mini-field">
+          <label>Points attribués</label>
+          <input type="number" id="pc-pts-${i}" value="${p.pts}" min="1" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px"/>
+        </div>
+      </div>
+      <div class="mini-field">
+        <label>Couleur</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+          ${COLORS.map(c=>`<div onclick="document.getElementById('pc-color-${i}').value='${c}';this.parentElement.querySelectorAll('.color-dot').forEach(d=>d.style.border='2px solid transparent');this.style.border='2px solid white'" class="color-dot" style="width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:${p.color===c?'2px solid white':'2px solid transparent'};transition:border .15s"></div>`).join('')}
+          <input type="hidden" id="pc-color-${i}" value="${p.color||'#C9A96E'}"/>
+        </div>
+      </div>
+    </div>`).join('');
   renderPaliersPreview();
 }
+
 function renderPaliersPreview(){
-  document.getElementById('paliers-preview').innerHTML=getPaliers().map(p=>`
-    <div class="palier-btn"><div class="palier-emoji">${p.emoji}</div><div class="palier-range">${p.range}</div>
-    <div class="palier-pts" style="color:${p.color}">+${p.pts} pts</div><div class="palier-desc">${p.label}</div></div>`).join('');
+  const paliers=getPaliers();
+  document.getElementById('paliers-preview').innerHTML=paliers.map(p=>`
+    <div class="palier-btn" style="min-width:120px;flex:1">
+      <div class="palier-emoji">${p.emoji}</div>
+      <div class="palier-range" style="font-size:11px">${p.range}</div>
+      <div class="palier-pts" style="color:${p.color||'#C9A96E'}">+${p.pts} pts</div>
+      <div class="palier-desc">${p.label}</div>
+    </div>`).join('');
 }
 
 // PROMOS
