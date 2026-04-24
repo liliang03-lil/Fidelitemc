@@ -714,6 +714,31 @@ async function rejectVisit(){
 }
 
 // DB
+const CP_VILLES = {
+  '98000': 'Monaco', '98001': 'Monaco', '98002': 'Monaco', '98003': 'Monaco',
+  '06240': 'Beausoleil', '06190': 'Roquebrune', '06320': "Cap d'Ail",
+  '06500': 'Menton', '06000': 'Nice', '06100': 'Nice', '06200': 'Nice',
+  '06300': 'Nice', '06100': 'Nice', '06400': 'Cannes', '06600': 'Antibes',
+  '06700': 'Saint-Laurent', '06800': 'Cagnes-sur-Mer', '06130': 'Grasse',
+  '06140': 'Vence', '06150': 'Cannes', '06160': 'Juan-les-Pins',
+  '06220': 'Vallauris', '06230': 'Villefranche', '06250': 'Mougins',
+  '06260': 'Puget-Théniers', '06270': 'Villeneuve-Loubet', '06340': 'Drap',
+  '06360': 'Eze', '06380': 'Sospel', '06390': 'Contes', '06410': 'Biot',
+  '06420': 'Le Bar-sur-Loup', '06430': 'Tende', '06440': 'Lucéram',
+  '06450': 'Saint-Martin', '06460': 'Saint-Vallier', '06470': 'Guillaumes',
+  '06480': 'La Colle-sur-Loup', '06490': 'Tourrette-Levens', '06510': 'Gattières',
+  '06520': 'Magagnosc', '06530': 'Cabris', '06540': 'Breil-sur-Roya',
+  '06550': 'La Roquette', '06560': 'Valbonne', '06570': 'Saint-Paul',
+  '06580': 'Pégomas', '06590': 'Théoule-sur-Mer', '06610': 'La Gaude',
+  '06620': 'Le Bar-sur-Loup', '06630': 'Crevalcore', '06640': 'Saint-Martin-Vésubie',
+  '06650': 'Le Rouret', '06660': 'Auron', '06670': 'Levens', '06690': 'Tourrette',
+  '06700': 'Saint-Laurent-du-Var', '06710': 'Villars-sur-Var', '06720': 'Coursegoules',
+  '06730': 'Saint-André', '06740': 'Châteauneuf', '06750': 'Valderoure',
+  '06760': 'Péone', '06770': 'Sallagriffon', '06780': 'Roquesteron',
+  '06790': 'Ascros', '06910': 'Roquesteron'
+};
+function getCityFromCP(cp){return CP_VILLES[cp]||'';}
+
 function renderDB(){
   const q=(document.getElementById('db-search').value||'').toLowerCase();
   let rows=[...merchantClients];
@@ -723,7 +748,7 @@ function renderDB(){
     <td style="font-weight:600;font-size:13px;white-space:nowrap">${r.prenom||''} ${r.nom||''}</td>
     <td style="color:var(--gray);font-size:11px">${r.email}</td>
     <td style="color:var(--gray);font-size:12px">${r.telephone||'—'}</td>
-    <td style="font-size:12px;color:var(--white)">${r.codePostal||'—'}</td>
+    <td style="font-size:12px;color:var(--white)">${r.codePostal||'—'}${getCityFromCP(r.codePostal||'')?`<br><span style="font-size:10px;color:var(--gray)">${getCityFromCP(r.codePostal)}</span>`:''}</td>
     <td><span style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold)">${r.points}</span></td>
     <td><span class="db-badge">${r.visites} visite${r.visites>1?'s':''}</span></td>
     <td style="font-weight:600;color:var(--white);font-size:13px">${r.panierMoyen>0?r.panierMoyen+'€':'—'}</td>
