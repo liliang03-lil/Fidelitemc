@@ -343,10 +343,10 @@ let pendingScanIndex=null, pendingScanEmail=null;
 let pollInterval=null, waitInterval=null;
 const promos=[];
 const PALIERS_DEFAULT=[
-  {emoji:'🟡',label:'Petit achat',range:'1 – 10 €',pts:15,color:'#C9A96E'},
-  {emoji:'🟠',label:'Achat moyen',range:'10 – 30 €',pts:40,color:'#E8903A'},
-  {emoji:'🔴',label:'Grand achat',range:'30 – 60 €',pts:80,color:'#E85555'},
-  {emoji:'💎',label:'Très grand',range:'60 € et +',pts:150,color:'#9B59B6'},
+  {emoji:'🟡',label:'Petit achat',type:'tranche',min:1,max:10,pts:15,color:'#C9A96E'},
+  {emoji:'🟠',label:'Achat moyen',type:'tranche',min:10,max:30,pts:40,color:'#E8903A'},
+  {emoji:'🔴',label:'Grand achat',type:'tranche',min:30,max:60,pts:80,color:'#E85555'},
+  {emoji:'💎',label:'Très grand',type:'unique',min:60,max:0,pts:150,color:'#9B59B6'},
 ];
 
 // ============================================================
@@ -685,11 +685,15 @@ async function validateVisit(){
   btnVal.disabled=true;
   btnVal.innerHTML='<span style="display:flex;align-items:center;justify-content:center;gap:6px"><span class="spinner"></span>Validation...</span>';
   try{
-    const rangeStr=p.range||'';
-    const nums=rangeStr.match(/\d+/g);
+    // Calcul montant estimé depuis min/max (plus fiable que le parsing texte)
     let montantEstime=0;
-    if(nums&&nums.length>=2){montantEstime=Math.round((parseInt(nums[0])+parseInt(nums[1]))/2);}
-    else if(nums&&nums.length===1){montantEstime=parseInt(nums[0])+10;}
+    if(p.type==='unique'){
+      montantEstime=p.min||0;
+    } else if(p.max&&p.max>0){
+      montantEstime=Math.round(((p.min||0)+(p.max||0))/2);
+    } else {
+      montantEstime=(p.min||0)+10; // Palier ouvert ex: 60€ et +
+    }
     await apiPost({action:'updateScan',index:pendingScanIndex,statut:'valid\u00e9'});
     await apiPost({action:'addPoints',email:pendingScanEmail,commerce_id:currentMerchant.commerce_id,points:p.pts,palier:p.emoji+' '+p.label,montant:montantEstime});
     showNotif(p.emoji+' +'+p.pts+' pts cr\u00e9dit\u00e9s \u2713');
@@ -785,7 +789,7 @@ function getPaliers(){try{const s=localStorage.getItem('paliers_'+(currentMercha
 
 function addPalier(){
   const paliers=getPaliers();
-  paliers.push({emoji:'🏷️',label:'Nouveau palier',range:'0 – 0 €',pts:10,color:'#C9A96E',type:'tranche'});
+  paliers.push({emoji:'🏷️',label:'Nouveau palier',type:'tranche',min:0,max:0,range:'0 – 0 €',pts:10,color:'#C9A96E'});
   try{localStorage.setItem('paliers_'+currentMerchant.commerce_id,JSON.stringify(paliers));}catch(e){}
   renderPaliersConfig();
   showNotif('Palier ajouté ✓');
@@ -806,10 +810,16 @@ function savePaliers(){
     const emoji=document.getElementById('pc-emoji-'+i)?.value||p.emoji;
     const label=document.getElementById('pc-label-'+i)?.value||p.label;
     const type=document.getElementById('pc-type-'+i)?.value||'tranche';
-    const range=document.getElementById('pc-range-'+i)?.value||p.range;
+    const min=parseFloat(document.getElementById('pc-min-'+i)?.value)||0;
+    const max=parseFloat(document.getElementById('pc-max-'+i)?.value)||0;
     const pts=parseInt(document.getElementById('pc-pts-'+i)?.value)||p.pts;
     const color=document.getElementById('pc-color-'+i)?.value||p.color;
-    return{...p,emoji,label,type,range,pts,color};
+    // Générer le label de tranche automatiquement
+    let range='';
+    if(type==='unique') range=min+'€';
+    else if(max===0) range=min+'€ et +';
+    else range=min+' – '+max+' €';
+    return{...p,emoji,label,type,min,max,range,pts,color};
   });
   try{localStorage.setItem('paliers_'+currentMerchant.commerce_id,JSON.stringify(updated));}catch(e){}
   renderPaliersConfig();
@@ -831,22 +841,32 @@ function renderPaliersConfig(){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div class="mini-field">
           <label>Type</label>
-          <select id="pc-type-${i}" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px" onchange="renderPaliersConfig()">
+          <select id="pc-type-${i}" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px">
             <option value="tranche" ${(p.type||'tranche')==='tranche'?'selected':''}>Tranche de prix</option>
             <option value="unique" ${p.type==='unique'?'selected':''}>Prix unique</option>
           </select>
         </div>
         <div class="mini-field">
-          <label>${(p.type||'tranche')==='unique'?'Prix exact':'Tranche (ex: 10 – 30 €)'}</label>
-          <input type="text" id="pc-range-${i}" value="${p.range}" placeholder="${(p.type||'tranche')==='unique'?'Ex: 25 €':'Ex: 10 – 30 €'}" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px"/>
-        </div>
-        <div class="mini-field">
-          <label>Label / Catégorie</label>
-          <input type="text" id="pc-label-${i}" value="${p.label}" placeholder="Ex: Grand acheteur" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px"/>
-        </div>
-        <div class="mini-field">
           <label>Points attribués</label>
           <input type="number" id="pc-pts-${i}" value="${p.pts}" min="1" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px"/>
+        </div>
+        ${(p.type||'tranche')==='tranche'?`
+        <div class="mini-field">
+          <label>De (€)</label>
+          <input type="number" id="pc-min-${i}" value="${p.min||0}" min="0" placeholder="Ex: 10" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px"/>
+        </div>
+        <div class="mini-field">
+          <label>À (€) — 0 = illimité</label>
+          <input type="number" id="pc-max-${i}" value="${p.max||0}" min="0" placeholder="Ex: 30" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px"/>
+        </div>`:`
+        <div class="mini-field" style="grid-column:1/-1">
+          <label>Prix exact (€)</label>
+          <input type="number" id="pc-min-${i}" value="${p.min||0}" min="0" placeholder="Ex: 25" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px"/>
+          <input type="hidden" id="pc-max-${i}" value="0"/>
+        </div>`}
+        <div class="mini-field" style="grid-column:1/-1">
+          <label>Label / Catégorie</label>
+          <input type="text" id="pc-label-${i}" value="${p.label}" placeholder="Ex: Grand acheteur" style="width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px"/>
         </div>
       </div>
       <div class="mini-field">
