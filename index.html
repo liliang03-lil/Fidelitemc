@@ -888,7 +888,7 @@ function renderAnalytics(){
       </div>
       <div class="card" style="padding:14px;text-align:center">
         <div style="font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Total scans validés</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${scanStats.totalScans||totalVisites}</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${scanStats.totalScans||clients.reduce((s,c)=>s+(c.visites||0),0)}</div>
         <div style="font-size:10px;color:var(--gray);margin-top:2px">depuis le début</div>
       </div>
     </div>
@@ -922,7 +922,7 @@ function renderAnalytics(){
       </div>
       <div class="card" style="padding:14px;text-align:center">
         <div style="font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Points moyens/client</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${Math.round(totalPts/totalClients)}</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${totalClients>0?Math.round(totalPts/totalClients):0}</div>
         <div style="font-size:10px;color:var(--gray);margin-top:2px">points par client</div>
       </div>
     </div>
