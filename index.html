@@ -758,6 +758,25 @@ function formatPhone(tel){
   return t;
 }
 
+function getPalierFromMontant(montant){
+  if(!montant||montant<=0)return '';
+  const paliers=getPaliers();
+  for(const p of paliers){
+    if(p.type==='unique'){
+      if(montant===p.min)return p.emoji+' '+p.label;
+    } else {
+      const min=p.min||0;
+      const max=p.max||0;
+      if(max===0&&montant>=min)return p.emoji+' '+p.label;
+      if(montant>=min&&montant<=max)return p.emoji+' '+p.label;
+    }
+  }
+  // Fallback — trouver le palier le plus proche
+  const sorted=[...paliers].sort((a,b)=>(b.min||0)-(a.min||0));
+  for(const p of sorted){if(montant>=(p.min||0))return p.emoji+' '+p.label;}
+  return paliers[0]?paliers[0].emoji+' '+paliers[0].label:'—';
+}
+
 function renderDB(){
   const q=(document.getElementById('db-search').value||'').toLowerCase();
   let rows=[...merchantClients];
@@ -771,7 +790,7 @@ function renderDB(){
     <td><span style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold)">${r.points}</span></td>
     <td><span class="db-badge">${r.visites} visite${r.visites>1?'s':''}</span></td>
     <td style="font-weight:600;color:var(--white);font-size:13px">${r.panierMoyen>0?r.panierMoyen+'€':'—'}</td>
-    <td style="font-size:12px">${r.panierMoyen>0?(r.palierMoyen||'—'):'—'}</td>
+    <td style="font-size:12px">${r.panierMoyen>0?(getPalierFromMontant(r.panierMoyen)||'—'):'—'}</td>
     <td style="color:var(--gray);font-size:11px;white-space:nowrap">${r.dernierScan||'—'}</td></tr>`).join('')
     :'<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:20px;font-size:13px">Aucun client trouvé</td></tr>';
   const total=rows.reduce((s,r)=>s+r.points,0);
