@@ -73,7 +73,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .db-table-wrap{overflow-x:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.07)}
 .db-table{width:100%;border-collapse:collapse;min-width:400px}
 .db-table th{background:rgba(201,169,110,0.1);padding:10px 12px;font-size:11px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;text-align:left;border-bottom:1px solid rgba(255,255,255,0.07);cursor:pointer}
-.db-table td{padding:11px 12px;font-size:13px;color:var(--white);border-bottom:1px solid rgba(255,255,255,0.04)}
+.db-table td{padding:13px 14px;font-size:12px;color:var(--white);border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
 .db-table tr:last-child td{border-bottom:none}
 .db-table tr:hover td{background:rgba(255,255,255,0.02)}
 .db-badge{display:inline-block;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:600;background:rgba(46,204,138,0.12);color:var(--success);border:1px solid rgba(46,204,138,0.2)}
@@ -151,6 +151,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     <div class="field"><label>Prénom</label><input type="text" id="reg-prenom" placeholder="Votre prénom"/></div>
     <div class="field"><label>Nom</label><input type="text" id="reg-nom" placeholder="Votre nom"/></div>
     <div class="field"><label>Téléphone</label><input type="tel" id="reg-tel" placeholder="+377 00 00 00 00"/></div>
+    <div class="field"><label>Code postal</label><input type="text" id="reg-cp" placeholder="Ex: 98000" maxlength="10"/></div>
     <div class="rgpd">
       <input type="checkbox" id="rgpd-check"/>
       <label for="rgpd-check">J'accepte les <a href="#">conditions d'utilisation</a> et la <a href="#">politique de confidentialité</a> (RGPD).</label>
@@ -239,6 +240,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
         <thead><tr>
           <th onclick="sortDB('nom')">Nom ↕</th>
           <th onclick="sortDB('email')">Email ↕</th>
+          <th>Téléphone</th>
+          <th>Code postal</th>
           <th onclick="sortDB('points')">Points ↕</th>
           <th onclick="sortDB('visites')">Visites ↕</th>
           <th onclick="sortDB('panierMoyen')">Panier moyen ↕</th>
@@ -427,11 +430,12 @@ async function handleRegister(){
   const prenom=document.getElementById('reg-prenom').value.trim();
   const nom=document.getElementById('reg-nom').value.trim();
   const telephone=document.getElementById('reg-tel').value.trim();
+  const codePostal=document.getElementById('reg-cp').value.trim();
   if(!prenom||!nom){showNotif('Remplissez tous les champs',true);return;}
   if(!document.getElementById('rgpd-check').checked){showNotif('Acceptez les conditions RGPD',true);return;}
   setLoading('btn-register',true);
   try{
-    const res=await apiPost({action:'createClient',email:currentUser,prenom,nom,telephone});
+    const res=await apiPost({action:'createClient',email:currentUser,prenom,nom,telephone,codePostal});
     if(res.created){
       if(scanCommerceId){
         // Après inscription via QR — créer scan et attendre
@@ -716,21 +720,23 @@ function renderDB(){
   if(q)rows=rows.filter(r=>(r.nom||'').toLowerCase().includes(q)||(r.email||'').toLowerCase().includes(q)||(r.prenom||'').toLowerCase().includes(q));
   rows.sort((a,b)=>{let va=a[dbSortKey]||'',vb=b[dbSortKey]||'';if(typeof va==='string'){va=va.toLowerCase();vb=vb.toLowerCase();}return dbSortAsc?(va>vb?1:-1):(va<vb?1:-1);});
   document.getElementById('db-body').innerHTML=rows.length?rows.map(r=>`<tr>
-    <td style="font-weight:500">${r.prenom||''} ${r.nom||''}</td>
-    <td style="color:var(--gray);font-size:12px">${r.email}</td>
-    <td><span style="font-family:'DM Serif Display',serif;font-size:16px;color:var(--gold)">${r.points}</span></td>
+    <td style="font-weight:600;font-size:13px;white-space:nowrap">${r.prenom||''} ${r.nom||''}</td>
+    <td style="color:var(--gray);font-size:11px">${r.email}</td>
+    <td style="color:var(--gray);font-size:12px">${r.telephone||'—'}</td>
+    <td style="font-size:12px;color:var(--white)">${r.codePostal||'—'}</td>
+    <td><span style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold)">${r.points}</span></td>
     <td><span class="db-badge">${r.visites} visite${r.visites>1?'s':''}</span></td>
-    <td style="font-weight:600;color:var(--white)">${r.panierMoyen>0?r.panierMoyen+'€':'—'}</td>
+    <td style="font-weight:600;color:var(--white);font-size:13px">${r.panierMoyen>0?r.panierMoyen+'€':'—'}</td>
     <td style="font-size:12px">${r.panierMoyen>0?(r.palierMoyen||'—'):'—'}</td>
-    <td style="color:var(--gray);font-size:11px">${r.dernierScan||'—'}</td></tr>`).join('')
-    :'<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:20px;font-size:13px">Aucun client trouvé</td></tr>';
+    <td style="color:var(--gray);font-size:11px;white-space:nowrap">${r.dernierScan||'—'}</td></tr>`).join('')
+    :'<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:20px;font-size:13px">Aucun client trouvé</td></tr>';
   const total=rows.reduce((s,r)=>s+r.points,0);
   document.getElementById('db-count').textContent=rows.length+' client'+(rows.length>1?'s':'');
   document.getElementById('db-total-pts').textContent='Total : '+total+' pts';
 }
 function sortDB(key){if(dbSortKey===key)dbSortAsc=!dbSortAsc;else{dbSortKey=key;dbSortAsc=true;}renderDB();}
 function exportCSV(){
-  const blob=new Blob(['Prénom,Nom,Email,Points,Visites,Dernier scan\n'+merchantClients.map(r=>`${r.prenom||''},${r.nom||''},${r.email},${r.points},${r.visites},${r.dernierScan||''}`).join('\n')],{type:'text/csv'});
+  const blob=new Blob(['Prénom,Nom,Email,Téléphone,Code postal,Points,Visites,Panier moyen,Palier moyen,Dernier scan\n'+merchantClients.map(r=>`${r.prenom||''},${r.nom||''},${r.email},${r.telephone||''},${r.codePostal||''},${r.points},${r.visites},${r.panierMoyen>0?r.panierMoyen+'€':''},${r.palierMoyen||''},${r.dernierScan||''}`).join('\n')],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='clients.csv';a.click();showNotif('CSV téléchargé ⬇');
 }
 
