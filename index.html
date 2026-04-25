@@ -1272,14 +1272,18 @@ function updateEmailPreview(){
   const msg=document.getElementById('email-message-custom').value.trim();
   const preview=document.getElementById('email-preview-custom');
   if(!msg){
-    preview.textContent='Message par défaut utilisé — Bonjour [Prénom], merci pour votre visite ! Vous avez gagné [X] points...';
+    preview.textContent='Message par défaut utilisé — Bonjour [Prénom], merci pour votre visite chez [Commerce] ! Vous avez gagné [X] points. Total : [Y] pts.';
+    preview.style.color='var(--gray)';
     return;
   }
+  preview.style.color='var(--white)';
   preview.textContent=msg
-    .replace(/{prénom}/g,'[Prénom]')
-    .replace(/{points}/g,'[Points gagnés]')
-    .replace(/{total}/g,'[Total points]')
-    .replace(/{commerce}/g,currentMerchant?.nom||'[Commerce]');
+    .replace(/{prénom}/g,'Lilian')
+    .replace(/{points}/g,'15')
+    .replace(/{total}/g,'120')
+    .replace(/{commerce}/g,currentMerchant?.nom||'votre commerce')
+    .replace(/{lienGoogle}/g,'https://g.page/r/votre-commerce')
+    .replace(/{lienSite}/g,'https://instagram.com/votre-commerce');
 }
 
 function logout(){
