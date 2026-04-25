@@ -331,6 +331,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <p class="section-title">Aperçu</p>
       <div id="paliers-preview" style="display:flex;flex-wrap:wrap;gap:8px;pointer-events:none"></div>
     </div>
+    <div class="card">
+      <p class="section-title">✉️ Message email automatique</p>
+      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Personnalisez le message envoyé après chaque visite. Variables disponibles : <span style="color:var(--gold)">{prénom}</span>, <span style="color:var(--gold)">{points}</span>, <span style="color:var(--gold)">{total}</span>, <span style="color:var(--gold)">{commerce}</span></p>
+      <div class="field">
+        <label>Message personnalisé</label>
+        <textarea id="email-message-custom" placeholder="Laissez vide pour utiliser le message par défaut&#10;&#10;Ex: Bonjour {prénom}, merci pour votre visite !&#10;Vous avez gagné {points} points. Total : {total} pts." style="min-height:120px"></textarea>
+      </div>
+      <div class="field">
+        <label>Aperçu du message</label>
+        <div id="email-preview-custom" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;font-size:12px;color:var(--gray);min-height:60px;white-space:pre-wrap"></div>
+      </div>
+      <button class="btn btn-gold" style="margin-top:8px" onclick="saveEmailMessage()">Enregistrer le message</button>
+    </div>
   </div>
   <button class="btn btn-outline" onclick="logout()" style="margin-top:4px">← Déconnexion</button>
 </div>
@@ -389,7 +402,7 @@ function switchMNav(btn,panelId){
   if(panelId==='dash-qr') generateQR();
   if(panelId==='dash-db') loadMerchantClients().then(renderDB);
   if(panelId==='dash-analytics') loadMerchantClients().then(()=>loadScanStats().then(renderAnalytics));
-  if(panelId==='dash-settings') renderPaliersConfig();
+  if(panelId==='dash-settings'){renderPaliersConfig();loadEmailSettings();}
 }
 function showNotif(msg,err=false){
   const n=document.getElementById('notif');n.textContent=msg;n.style.background=err?'var(--danger)':'var(--success)';
@@ -1078,7 +1091,38 @@ function savePaliers(){
   showNotif('Paliers enregistrés ✓');
 }
 
+function previewEmailSettings(){
+  const msg=document.getElementById('email-custom-msg').value.trim();
+  if(!msg){showNotif('Écrivez un message d\'abord',true);return;}
+  const preview=msg
+    .replace(/{prénom}/g,'Lilian')
+    .replace(/{points}/g,'15')
+    .replace(/{total}/g,'120')
+    .replace(/{commerce}/g,currentMerchant.nom||'votre commerce');
+  const panel=document.getElementById('email-preview-settings');
+  panel.style.display='block';
+  panel.textContent=preview;
+}
+
+function saveEmailSettings(){
+  const msg=document.getElementById('email-custom-msg').value.trim();
+  try{localStorage.setItem('email_msg_'+(currentMerchant.commerce_id||'x'),msg);}catch(e){}
+  showNotif('Message enregistré ✓');
+}
+
+function loadEmailSettings(){
+  try{
+    const msg=localStorage.getItem('email_msg_'+(currentMerchant.commerce_id||'x'))||'';
+    const el=document.getElementById('email-custom-msg');
+    if(el)el.value=msg;
+  }catch(e){}
+}
+
 function renderPaliersConfig(){
+  // Charger aussi les paramètres email
+  setTimeout(()=>{
+    if(document.getElementById('email-message-custom')) loadEmailMessageSettings();
+  }, 100);
   const paliers=getPaliers();
   const COLORS=['#C9A96E','#E8903A','#E85555','#9B59B6','#2ECC8A','#4A8ED4','#E91E8C','#FF6B35'];
   document.getElementById('paliers-config').innerHTML=paliers.map((p,i)=>`
@@ -1204,6 +1248,38 @@ async function goToWallet(){
   } else {
     showScreen('s-scan');
   }
+}
+
+function saveEmailMessage(){
+  const msg=document.getElementById('email-message-custom').value.trim();
+  try{
+    localStorage.setItem('email_msg_'+(currentMerchant?.commerce_id||'x'), msg);
+  }catch(e){}
+  // Sauvegarder aussi dans le Apps Script via une action POST
+  apiPost({action:'saveEmailMessage', commerce_id:currentMerchant.commerce_id, message:msg})
+    .then(()=>showNotif('Message enregistré ✓'))
+    .catch(()=>showNotif('Message enregistré localement ✓'));
+}
+
+function loadEmailMessageSettings(){
+  const saved=localStorage.getItem('email_msg_'+(currentMerchant?.commerce_id||'x'))||'';
+  document.getElementById('email-message-custom').value=saved;
+  updateEmailPreview();
+  document.getElementById('email-message-custom').addEventListener('input', updateEmailPreview);
+}
+
+function updateEmailPreview(){
+  const msg=document.getElementById('email-message-custom').value.trim();
+  const preview=document.getElementById('email-preview-custom');
+  if(!msg){
+    preview.textContent='Message par défaut utilisé — Bonjour [Prénom], merci pour votre visite ! Vous avez gagné [X] points...';
+    return;
+  }
+  preview.textContent=msg
+    .replace(/{prénom}/g,'[Prénom]')
+    .replace(/{points}/g,'[Points gagnés]')
+    .replace(/{total}/g,'[Total points]')
+    .replace(/{commerce}/g,currentMerchant?.nom||'[Commerce]');
 }
 
 function logout(){
