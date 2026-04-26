@@ -542,10 +542,12 @@ async function renderWallet(email,data){
 
     // Récupérer les promos visibles depuis l'API
     let promosVisibles=[];
+    let promosEnCours=[];
     try{
       const promoData=await apiGet({action:'getPromos',commerce_id:p.commerce_id});
       const allPromos=promoData.promos||[];
       const now=new Date();
+      // Promos atteintes
       promosVisibles=allPromos.filter(pr=>{
         if(!pr.active||pr.visible===false)return false;
         if(pr.fin&&new Date(pr.fin)<now)return false;
@@ -560,7 +562,47 @@ async function renderWallet(email,data){
         }
         return true;
       });
+      // Promos en cours (pas encore atteintes mais visibles)
+      promosEnCours=allPromos.filter(pr=>{
+        if(!pr.active||pr.visible===false)return false;
+        if(pr.fin&&new Date(pr.fin)<now)return false;
+        if(pr.debut&&new Date(pr.debut)>now)return false;
+        if(pr.cond&&pr.cond.startsWith('points_')){
+          const seuil=parseInt(pr.cond.split('_')[1]);
+          return p.points<seuil; // Pas encore atteint
+        }
+        if(pr.cond&&pr.cond.startsWith('visites_')){
+          const seuil=parseInt(pr.cond.split('_')[1]);
+          return p.visites<seuil;
+        }
+        return false;
+      });
     }catch(e){}
+
+    const promosEnCoursHtml=promosEnCours.length?`
+      <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px">
+        <div style="font-size:10px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">🎯 Objectifs en cours</div>
+        ${promosEnCours.map(pr=>{
+          let seuil=0,actuel=0;
+          if(pr.cond&&pr.cond.startsWith('points_')){seuil=parseInt(pr.cond.split('_')[1]);actuel=p.points;}
+          if(pr.cond&&pr.cond.startsWith('visites_')){seuil=parseInt(pr.cond.split('_')[1]);actuel=p.visites;}
+          const pct=Math.min(Math.round((actuel/seuil)*100),99);
+          const manquant=seuil-actuel;
+          return `<div style="background:rgba(201,169,110,0.06);border:1px solid rgba(201,169,110,0.15);border-radius:8px;padding:10px;margin-bottom:6px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:14px">${pr.type==='produit'?'🎁':pr.type==='remise'?'💰':pr.type==='experience'?'⭐':'🏷️'}</span>
+                <span style="font-size:12px;font-weight:600;color:var(--white)">${pr.titre}</span>
+              </div>
+              <span style="font-size:10px;color:var(--gold);font-weight:600">encore ${manquant} ${pr.cond.startsWith('points_')?'pts':'visites'}</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.06);border-radius:99px;height:5px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:var(--gold);border-radius:99px;transition:width 1s ease"></div>
+            </div>
+            <div style="font-size:10px;color:var(--gray);margin-top:4px">${actuel} / ${seuil} ${pr.cond.startsWith('points_')?'pts':'visites'}</div>
+          </div>`;
+        }).join('')}
+      </div>`:'';
 
     const promosHtml=promosVisibles.length?`
       <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px">
@@ -585,7 +627,8 @@ async function renderWallet(email,data){
       <div style="font-size:10px;color:var(--gray)">pts</div></div></div>
       <div class="commerce-bar-wrap"><div class="commerce-bar" style="width:${pct}%;background:var(--gold)"></div></div>
       <div style="font-size:10px;color:var(--gray);margin-top:4px">Encore <span style="color:var(--gold)">${Math.max(reward-p.points,0)} pts</span> pour la récompense</div>
-      ${promosHtml}`;
+      ${promosHtml}
+      ${promosEnCoursHtml}`;
     list.appendChild(d);
   }
 }
