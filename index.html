@@ -1152,6 +1152,60 @@ function renderAnalytics(){
       </div>`).join('')}
     </div>
 
+    <p class="section-title">📊 Rétention mensuelle</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
+      <div class="card" style="padding:14px;text-align:center">
+        <div style="font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Clients actifs ce mois</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${scanStats.scansMois||0}</div>
+        <div style="font-size:10px;color:var(--gray);margin-top:2px">scans ce mois</div>
+      </div>
+      <div class="card" style="padding:14px;text-align:center">
+        <div style="font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Mois précédent</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${scanStats.scansMoisPrec||0}</div>
+        <div style="font-size:10px;color:var(--gray);margin-top:2px">${(()=>{
+          const diff=(scanStats.scansMois||0)-(scanStats.scansMoisPrec||0);
+          if(diff>0)return '<span style="color:var(--success)">↑ +'+diff+' vs mois préc.</span>';
+          if(diff<0)return '<span style="color:#E85555">↓ '+diff+' vs mois préc.</span>';
+          return 'stable vs mois préc.';
+        })()}</div>
+      </div>
+    </div>
+
+    <p class="section-title">📅 Évolution des inscriptions</p>
+    <div style="margin-bottom:20px">
+      ${(()=>{
+        // Grouper les clients par mois d'inscription
+        const MOIS_NOMS=['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+        const moisMap={};
+        clients.forEach(c=>{
+          if(!c.dateInscription)return;
+          try{
+            const parts=c.dateInscription.split('/');
+            if(parts.length===3){
+              const key=parts[2]+'-'+parts[1].padStart(2,'0');
+              moisMap[key]=(moisMap[key]||0)+1;
+            }
+          }catch(e){}
+        });
+        const sorted=Object.entries(moisMap).sort((a,b)=>a[0].localeCompare(b[0])).slice(-6);
+        if(!sorted.length)return '<p style="color:var(--gray);font-size:12px;text-align:center">Pas encore assez de données</p>';
+        const max=Math.max(...sorted.map(s=>s[1]));
+        return sorted.map(([key,count])=>{
+          const parts=key.split('-');
+          const label=MOIS_NOMS[parseInt(parts[1])-1]+' '+parts[0];
+          const pct=max>0?Math.round((count/max)*100):0;
+          return '<div style="margin-bottom:8px">'
+            +'<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+            +'<span style="font-size:11px;color:var(--gray)">'+label+'</span>'
+            +'<span style="font-size:11px;color:var(--gold)">'+count+' nouveau'+(count>1?'x':'')+'</span>'
+            +'</div>'
+            +'<div style="background:rgba(255,255,255,0.06);border-radius:99px;height:5px;overflow:hidden">'
+            +'<div style="height:100%;width:'+pct+'%;background:var(--gold);border-radius:99px"></div>'
+            +'</div></div>';
+        }).join('');
+      })()}
+    </div>
+
     <p class="section-title">🔄 Fidélité par tranche</p>
     <div style="margin-bottom:20px">
       ${(()=>{
