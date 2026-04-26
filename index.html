@@ -374,6 +374,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <p class="section-title">Aperçu</p>
       <div id="paliers-preview" style="display:flex;flex-wrap:wrap;gap:8px;pointer-events:none"></div>
     </div>
+    <div class="card">
+      <p class="section-title">🔔 Message de relance clients inactifs</p>
+      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Message envoyé aux clients inactifs depuis 30+ jours. Variables : <span style="color:var(--gold)">{prénom}</span>, <span style="color:var(--gold)">{commerce}</span></p>
+      <div class="field">
+        <label>Message personnalisé (laisser vide pour le message par défaut)</label>
+        <textarea id="relance-message-custom" placeholder="Bonjour {prénom},&#10;&#10;Cela fait un moment que nous ne vous avons pas vu chez {commerce} !&#10;Vos points vous attendent — revenez nous rendre visite.&#10;&#10;À très bientôt !" style="min-height:100px"></textarea>
+      </div>
+      <button class="btn btn-gold" style="margin-top:8px" onclick="saveRelanceMessage()">Enregistrer</button>
+    </div>
   </div>
   <button class="btn btn-outline" onclick="logout()" style="margin-top:4px">← Déconnexion</button>
 </div>
@@ -433,7 +442,7 @@ function switchMNav(btn,panelId){
   if(panelId==='dash-promos'){loadPromos();renderPromos();}
   if(panelId==='dash-db') loadMerchantClients().then(renderDB);
   if(panelId==='dash-analytics') loadMerchantClients().then(()=>loadScanStats().then(renderAnalytics));
-  if(panelId==='dash-settings') renderPaliersConfig();
+  if(panelId==='dash-settings'){renderPaliersConfig();loadRelanceMessage();}
   if(panelId==='dash-email') loadEmailMessageSettings();
 }
 function showNotif(msg,err=false){
@@ -1025,11 +1034,20 @@ function renderAnalytics(){
     }
   });
 
-  // Clients inactifs (dernierScan vide ou ancien)
-  const inactifs=clients.filter(c=>{
+  // Clients inactifs depuis 30 jours
+  const now30=new Date();
+  now30.setDate(now30.getDate()-30);
+  const clientsInactifs30=clients.filter(c=>{
     if(!c.dernierScan||c.dernierScan==='—')return true;
+    // Parser la date française dd/MM/yyyy
+    const parts=c.dernierScan.split('/');
+    if(parts.length===3){
+      const d=new Date(parts[2],parts[1]-1,parts[0]);
+      return d<now30;
+    }
     return false;
-  }).length;
+  });
+  const inactifs=clientsInactifs30.length;
 
   document.getElementById('analytics-content').innerHTML=`
     <p class="section-title">📅 Activité</p>
@@ -1190,18 +1208,81 @@ function renderAnalytics(){
     </div>
 
     <p class="section-title">⚠️ Alertes</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
       <div class="card" style="padding:14px;text-align:center;border-color:rgba(232,85,85,0.2)">
-        <div style="font-size:10px;color:#E85555;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Clients inactifs</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${inactifs}</div>
-        <div style="font-size:10px;color:var(--gray);margin-top:2px">sans historique</div>
+        <div style="font-size:10px;color:#E85555;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Clients inactifs 30j+</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${clientsInactifs30.length}</div>
+        <div style="font-size:10px;color:var(--gray);margin-top:2px">sans visite depuis 30j</div>
       </div>
       <div class="card" style="padding:14px;text-align:center;border-color:rgba(46,204,138,0.2)">
         <div style="font-size:10px;color:var(--success);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Proches récompense</div>
         <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--white)">${clientsProches}</div>
         <div style="font-size:10px;color:var(--gray);margin-top:2px">≥80% du seuil</div>
       </div>
-    </div>`;
+    </div>
+    ${clientsInactifs30.length>0?`
+    <div style="background:rgba(232,85,85,0.06);border:1px solid rgba(232,85,85,0.15);border-radius:12px;padding:14px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:#E85555">🔔 Clients à relancer</div>
+        <button onclick="relancerTousInactifs()" style="background:rgba(232,85,85,0.15);border:1px solid rgba(232,85,85,0.3);color:#E85555;border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">Relancer tous</button>
+      </div>
+      ${clientsInactifs30.slice(0,5).map(c=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:4px">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--white)">${c.prenom} ${c.nom}</div>
+          <div style="font-size:10px;color:var(--gray)">${c.dernierScan||'Jamais'} · ${c.points} pts</div>
+        </div>
+        <button onclick="relancerClient('${c.email}','${c.prenom}')" style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);color:var(--gold);border-radius:8px;padding:4px 10px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">Relancer</button>
+      </div>`).join('')}
+      ${clientsInactifs30.length>5?`<div style="font-size:11px;color:var(--gray);text-align:center;margin-top:6px">+ ${clientsInactifs30.length-5} autres clients inactifs</div>`:''}
+    </div>`:''}`;
+}
+
+async function relancerClient(email, prenom){
+  try{
+    const sujet='Nous vous manquez ! 🌟';
+    const message=getRelanceMessage(prenom);
+    await apiPost({action:'sendBulkEmail',commerce_id:currentMerchant.commerce_id,sujet,message,filtre:'all',emails:[email]});
+    showNotif('Email de relance envoyé à '+prenom+' ✓');
+  }catch(e){showNotif('Erreur',true);}
+}
+
+async function relancerTousInactifs(){
+  try{
+    const msgRelance=localStorage.getItem('relance_msg_'+(currentMerchant?.commerce_id||'x'))||'Bonjour {prénom},\n\nCela fait un moment que nous ne vous avons pas vu chez '+currentMerchant.nom+' !\n\nVos points vous attendent.\n\nÀ très bientôt !\nL\'équipe '+currentMerchant.nom;
+    const res=await apiPost({
+      action:'sendBulkEmail',
+      commerce_id:currentMerchant.commerce_id,
+      sujet:'Nous vous manquez ! 🌟',
+      message:msgRelance,
+      filtre:'all'
+    });
+    showNotif('✉️ '+res.envoyes+' email'+(res.envoyes>1?'s':'')+' de relance envoyé'+(res.envoyes>1?'s':''));
+  }catch(e){showNotif('Erreur',true);}
+}
+
+function saveRelanceMessage(){
+  const msg=document.getElementById('relance-message-custom').value.trim();
+  try{localStorage.setItem('relance_msg_'+(currentMerchant?.commerce_id||'x'),msg);}catch(e){}
+  showNotif('Message de relance enregistré ✓');
+}
+
+function loadRelanceMessage(){
+  try{
+    const msg=localStorage.getItem('relance_msg_'+(currentMerchant?.commerce_id||'x'))||'';
+    const el=document.getElementById('relance-message-custom');
+    if(el)el.value=msg;
+  }catch(e){}
+}
+
+function getRelanceMessage(prenom){
+  try{
+    const msg=localStorage.getItem('relance_msg_'+(currentMerchant?.commerce_id||'x'))||'';
+    if(msg){
+      return msg.replace(/{prénom}/gi,prenom).replace(/{commerce}/gi,currentMerchant.nom||'');
+    }
+  }catch(e){}
+  return 'Bonjour '+prenom+',\n\nCela fait un moment que nous ne vous avons pas vu chez '+( currentMerchant?.nom||'nous')+' !\n\nVos points vous attendent — revenez nous rendre visite prochainement.\n\nÀ très bientôt !\nL\'équipe '+(currentMerchant?.nom||'');
 }
 
 function exportCSV(){
