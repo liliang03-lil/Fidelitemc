@@ -537,32 +537,29 @@ async function renderWallet(email,data){
   document.getElementById('wallet-programs').textContent=programmes.length+' programme'+(programmes.length>1?'s':'')+' actif'+(programmes.length>1?'s':'');
   const list=document.getElementById('commerce-list');list.innerHTML='';
   if(!programmes.length){list.innerHTML='<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px 0">Aucun programme actif.<br>Scannez un QR code !</div>';return;}
-  programmes.forEach(p=>{
+  for(const p of programmes){
     const reward=p.reward||500,pct=Math.min((p.points/reward)*100,100);
 
-    // Récupérer les promos visibles pour ce commerce
+    // Récupérer les promos visibles depuis l'API
     let promosVisibles=[];
     try{
-      const savedPromos=localStorage.getItem('promos_'+p.commerce_id);
-      if(savedPromos){
-        const allPromos=JSON.parse(savedPromos);
-        const now=new Date();
-        promosVisibles=allPromos.filter(pr=>{
-          if(!pr.active||pr.visible===false)return false;
-          if(pr.fin&&new Date(pr.fin)<now)return false;
-          if(pr.debut&&new Date(pr.debut)>now)return false;
-          // Vérifier condition
-          if(pr.cond&&pr.cond.startsWith('points_')){
-            const seuil=parseInt(pr.cond.split('_')[1]);
-            if(p.points<seuil)return false;
-          }
-          if(pr.cond&&pr.cond.startsWith('visites_')){
-            const seuil=parseInt(pr.cond.split('_')[1]);
-            if(p.visites<seuil)return false;
-          }
-          return true;
-        });
-      }
+      const promoData=await apiGet({action:'getPromos',commerce_id:p.commerce_id});
+      const allPromos=promoData.promos||[];
+      const now=new Date();
+      promosVisibles=allPromos.filter(pr=>{
+        if(!pr.active||pr.visible===false)return false;
+        if(pr.fin&&new Date(pr.fin)<now)return false;
+        if(pr.debut&&new Date(pr.debut)>now)return false;
+        if(pr.cond&&pr.cond.startsWith('points_')){
+          const seuil=parseInt(pr.cond.split('_')[1]);
+          if(p.points<seuil)return false;
+        }
+        if(pr.cond&&pr.cond.startsWith('visites_')){
+          const seuil=parseInt(pr.cond.split('_')[1]);
+          if(p.visites<seuil)return false;
+        }
+        return true;
+      });
     }catch(e){}
 
     const promosHtml=promosVisibles.length?`
@@ -590,7 +587,7 @@ async function renderWallet(email,data){
       <div style="font-size:10px;color:var(--gray);margin-top:4px">Encore <span style="color:var(--gold)">${Math.max(reward-p.points,0)} pts</span> pour la récompense</div>
       ${promosHtml}`;
     list.appendChild(d);
-  });
+  }
 }
 
 function renderDetail(p){
