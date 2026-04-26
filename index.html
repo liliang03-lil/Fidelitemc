@@ -673,6 +673,7 @@ async function renderMerchantDash(){
   document.getElementById('dash-sub').textContent=currentMerchant.type||'';
   document.getElementById('dash-stats').innerHTML='<div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Chargement...</div>';
   await loadMerchantClients();
+  await loadScanStats();
   updateStats();
   updateRecentScans();
   loadPromos();renderPromos();
@@ -1515,4 +1516,4 @@ function logout(){
 initFromURL();
 </script>
 </body>
-</html>
+</html
