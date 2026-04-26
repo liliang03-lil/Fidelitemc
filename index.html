@@ -539,6 +539,45 @@ async function renderWallet(email,data){
   if(!programmes.length){list.innerHTML='<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px 0">Aucun programme actif.<br>Scannez un QR code !</div>';return;}
   programmes.forEach(p=>{
     const reward=p.reward||500,pct=Math.min((p.points/reward)*100,100);
+
+    // Récupérer les promos visibles pour ce commerce
+    let promosVisibles=[];
+    try{
+      const savedPromos=localStorage.getItem('promos_'+p.commerce_id);
+      if(savedPromos){
+        const allPromos=JSON.parse(savedPromos);
+        const now=new Date();
+        promosVisibles=allPromos.filter(pr=>{
+          if(!pr.active||pr.visible===false)return false;
+          if(pr.fin&&new Date(pr.fin)<now)return false;
+          if(pr.debut&&new Date(pr.debut)>now)return false;
+          // Vérifier condition
+          if(pr.cond&&pr.cond.startsWith('points_')){
+            const seuil=parseInt(pr.cond.split('_')[1]);
+            if(p.points<seuil)return false;
+          }
+          if(pr.cond&&pr.cond.startsWith('visites_')){
+            const seuil=parseInt(pr.cond.split('_')[1]);
+            if(p.visites<seuil)return false;
+          }
+          return true;
+        });
+      }
+    }catch(e){}
+
+    const promosHtml=promosVisibles.length?`
+      <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px">
+        <div style="font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">🎁 Promotions disponibles</div>
+        ${promosVisibles.map(pr=>`
+          <div style="background:rgba(46,204,138,0.06);border:1px solid rgba(46,204,138,0.15);border-radius:8px;padding:8px 10px;margin-bottom:4px;display:flex;align-items:center;gap:8px">
+            <span style="font-size:16px">${pr.type==='produit'?'🎁':pr.type==='remise'?'💰':pr.type==='experience'?'⭐':'🏷️'}</span>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--white)">${pr.titre}</div>
+              ${pr.desc?`<div style="font-size:10px;color:var(--gray)">${pr.desc}</div>`:''}
+            </div>
+          </div>`).join('')}
+      </div>`:'';
+
     const d=document.createElement('div');d.className='commerce-card';d.onclick=()=>renderDetail(p);
     d.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between">
       <div style="display:flex;align-items:center">
@@ -548,7 +587,8 @@ async function renderWallet(email,data){
       <div style="text-align:right"><div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold)">${p.points}</div>
       <div style="font-size:10px;color:var(--gray)">pts</div></div></div>
       <div class="commerce-bar-wrap"><div class="commerce-bar" style="width:${pct}%;background:var(--gold)"></div></div>
-      <div style="font-size:10px;color:var(--gray);margin-top:4px">Encore <span style="color:var(--gold)">${Math.max(reward-p.points,0)} pts</span> pour la récompense</div>`;
+      <div style="font-size:10px;color:var(--gray);margin-top:4px">Encore <span style="color:var(--gold)">${Math.max(reward-p.points,0)} pts</span> pour la récompense</div>
+      ${promosHtml}`;
     list.appendChild(d);
   });
 }
