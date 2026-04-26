@@ -1036,16 +1036,32 @@ function renderAnalytics(){
 
   // Clients inactifs depuis 30 jours
   const now30=new Date();
-  now30.setDate(now30.getDate()-30);
-  const clientsInactifs30=clients.filter(c=>{
-    if(!c.dernierScan||c.dernierScan==='—')return true;
-    // Parser la date française dd/MM/yyyy
-    const parts=c.dernierScan.split('/');
-    if(parts.length===3){
-      const d=new Date(parts[2],parts[1]-1,parts[0]);
-      return d<now30;
+  const limite30=new Date(now30);
+  limite30.setDate(limite30.getDate()-30);
+  
+  const MOIS={'janvier':0,'février':1,'mars':2,'avril':3,'mai':4,'juin':5,'juillet':6,'août':7,'septembre':8,'octobre':9,'novembre':10,'décembre':11};
+  
+  function parseDate(str){
+    if(!str||str==='—')return null;
+    // Format "5 avril 2026"
+    const m=str.match(/^(\d+)\s+(\w+)\s+(\d{4})$/);
+    if(m){
+      const moisNum=MOIS[m[2].toLowerCase()];
+      if(moisNum!==undefined) return new Date(parseInt(m[3]),moisNum,parseInt(m[1]));
     }
-    return false;
+    // Format "dd/MM/yyyy"
+    const p=str.split('/');
+    if(p.length===3) return new Date(p[2],p[1]-1,p[0]);
+    // Format ISO
+    const d=new Date(str);
+    if(!isNaN(d)) return d;
+    return null;
+  }
+  
+  const clientsInactifs30=clients.filter(c=>{
+    const d=parseDate(c.dernierScan);
+    if(!d) return true; // Pas de date = inactif
+    return d<limite30;
   });
   const inactifs=clientsInactifs30.length;
 
