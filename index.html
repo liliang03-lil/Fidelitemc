@@ -1477,12 +1477,36 @@ function previewEmail(){
   const target=document.getElementById('email-target').value;
   const filtered=target==='all'?merchantClients:merchantClients.filter(c=>c.points>=parseInt(target));
   document.getElementById('ep-from').textContent=currentMerchant.nom;
-  document.getElementById('ep-to').textContent=filtered.length+' client'+(filtered.length>1?'s':'');
+  document.getElementById('ep-to').textContent=filtered.length+' client'+(filtered.length>1?'s':'')+' recevront cet email';
   document.getElementById('ep-subject').textContent=subject;
-  document.getElementById('ep-body').innerHTML='<p>'+body.replace(/\{prénom\}/g,'<span style="color:var(--gold);font-weight:600">[Prénom]</span>').replace(/\n/g,'<br>')+'</p>';
+  document.getElementById('ep-body').innerHTML='<p>'+body.replace(/\{prénom\}/g,'<span style="color:var(--gold);font-weight:600">[Prénom]</span>').replace(/\{points\}/g,'<span style="color:var(--gold);font-weight:600">[Points]</span>').replace(/\n/g,'<br>')+'</p>';
   document.getElementById('email-preview-panel').style.display='block';
 }
-function sendEmail(){showNotif('Emails envoyés ✉️');document.getElementById('email-preview-panel').style.display='none';}
+async function sendEmail(){
+  const subject=document.getElementById('email-subject').value.trim();
+  const body=document.getElementById('email-body').value.trim();
+  const target=document.getElementById('email-target').value;
+  
+  const btnSend=document.querySelector('#email-preview-panel .btn-gold');
+  if(btnSend){btnSend.disabled=true;btnSend.textContent='Envoi en cours...';}
+  
+  try{
+    const res=await apiPost({
+      action:'sendBulkEmail',
+      commerce_id:currentMerchant.commerce_id,
+      sujet:subject,
+      message:body,
+      filtre:target
+    });
+    document.getElementById('email-preview-panel').style.display='none';
+    showNotif('✉️ '+res.envoyes+' email'+(res.envoyes>1?'s':'')+' envoyé'+(res.envoyes>1?'s':'')+'  sur '+res.total+' clients');
+    document.getElementById('email-subject').value='';
+    document.getElementById('email-body').value='';
+  }catch(e){
+    showNotif('Erreur envoi',true);
+  }
+  if(btnSend){btnSend.disabled=false;btnSend.textContent='Envoyer';}
+}
 
 // QR CODE
 function generateQR(){
