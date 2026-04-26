@@ -877,7 +877,7 @@ async function validateVisit(){
     } else {
       montantEstime=(p.min||0)+10; // Palier ouvert ex: 60€ et +
     }
-    await apiPost({action:'updateScan',index:pendingScanIndex,statut:'valid\u00e9',palier:p.emoji+' '+p.label});
+    await apiPost({action:'updateScan',index:pendingScanIndex,statut:'valid\u00e9',palier:p.emoji+' '+p.label,points:p.pts});
     // Récupérer le message personnalisé depuis localStorage
     const msgPerso=localStorage.getItem('email_msg_'+(currentMerchant.commerce_id||'x'))||'';
     await apiPost({action:'addPoints',email:pendingScanEmail,commerce_id:currentMerchant.commerce_id,points:p.pts,palier:p.emoji+' '+p.label,montant:montantEstime,messageEmail:msgPerso});
