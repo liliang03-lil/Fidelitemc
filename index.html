@@ -537,47 +537,51 @@ async function renderWallet(email,data){
   document.getElementById('wallet-programs').textContent=programmes.length+' programme'+(programmes.length>1?'s':'')+' actif'+(programmes.length>1?'s':'');
   const list=document.getElementById('commerce-list');list.innerHTML='';
   if(!programmes.length){list.innerHTML='<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px 0">Aucun programme actif.<br>Scannez un QR code !</div>';return;}
+  // Charger toutes les promos pour tous les commerces en avance
+  const promoCache={};
+  for(const p of programmes){
+    try{
+      const pd=await apiGet({action:'getPromos',commerce_id:p.commerce_id});
+      promoCache[p.commerce_id]=pd.promos||[];
+    }catch(e){promoCache[p.commerce_id]=[];}
+  }
+
   for(const p of programmes){
     const reward=p.reward||500,pct=Math.min((p.points/reward)*100,100);
+    const allPromos=promoCache[p.commerce_id]||[];
+    const now=new Date();
 
-    // Récupérer les promos visibles depuis l'API
-    let promosVisibles=[];
-    let promosEnCours=[];
-    try{
-      const promoData=await apiGet({action:'getPromos',commerce_id:p.commerce_id});
-      const allPromos=promoData.promos||[];
-      const now=new Date();
-      // Promos atteintes
-      promosVisibles=allPromos.filter(pr=>{
-        if(!pr.active||pr.visible===false)return false;
-        if(pr.fin&&new Date(pr.fin)<now)return false;
-        if(pr.debut&&new Date(pr.debut)>now)return false;
-        if(pr.cond&&pr.cond.startsWith('points_')){
-          const seuil=parseInt(pr.cond.split('_')[1]);
-          if(p.points<seuil)return false;
-        }
-        if(pr.cond&&pr.cond.startsWith('visites_')){
-          const seuil=parseInt(pr.cond.split('_')[1]);
-          if(p.visites<seuil)return false;
-        }
-        return true;
-      });
-      // Promos en cours (pas encore atteintes mais visibles)
-      promosEnCours=allPromos.filter(pr=>{
-        if(!pr.active||pr.visible===false)return false;
-        if(pr.fin&&new Date(pr.fin)<now)return false;
-        if(pr.debut&&new Date(pr.debut)>now)return false;
-        if(pr.cond&&pr.cond.startsWith('points_')){
-          const seuil=parseInt(pr.cond.split('_')[1]);
-          return p.points<seuil; // Pas encore atteint
-        }
-        if(pr.cond&&pr.cond.startsWith('visites_')){
-          const seuil=parseInt(pr.cond.split('_')[1]);
-          return p.visites<seuil;
-        }
-        return false;
-      });
-    }catch(e){}
+    // Promos atteintes
+    let promosVisibles=allPromos.filter(pr=>{
+      if(!pr.active||pr.visible===false)return false;
+      if(pr.fin&&new Date(pr.fin)<now)return false;
+      if(pr.debut&&new Date(pr.debut)>now)return false;
+      if(pr.cond&&pr.cond.startsWith('points_')){
+        const seuil=parseInt(pr.cond.split('_')[1]);
+        if(p.points<seuil)return false;
+      }
+      if(pr.cond&&pr.cond.startsWith('visites_')){
+        const seuil=parseInt(pr.cond.split('_')[1]);
+        if(p.visites<seuil)return false;
+      }
+      return true;
+    });
+
+    // Promos en cours
+    let promosEnCours=allPromos.filter(pr=>{
+      if(!pr.active||pr.visible===false)return false;
+      if(pr.fin&&new Date(pr.fin)<now)return false;
+      if(pr.debut&&new Date(pr.debut)>now)return false;
+      if(pr.cond&&pr.cond.startsWith('points_')){
+        const seuil=parseInt(pr.cond.split('_')[1]);
+        return p.points<seuil;
+      }
+      if(pr.cond&&pr.cond.startsWith('visites_')){
+        const seuil=parseInt(pr.cond.split('_')[1]);
+        return p.visites<seuil;
+      }
+      return false;
+    });
 
     const promosEnCoursHtml=promosEnCours.length?`
       <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px">
@@ -647,20 +651,20 @@ async function renderDetail(p){
   const reward=p.reward||500,pct=Math.min((p.points/reward)*100,100);
   showScreen('s-detail');
 
-  document.getElementById('detail-content').innerHTML=`
-    <div class="card card-gold"><div style="text-align:center;padding:20px 0">
-      <div style="font-size:28px;margin-bottom:8px">🏪</div>
-      <div style="font-size:16px;font-weight:700;color:var(--white);margin-bottom:4px">${p.commerce_nom||p.commerce_id}</div>
-      <div style="font-family:'DM Serif Display',serif;font-size:60px;color:var(--gold);line-height:1">${p.points}</div>
-      <div style="font-size:13px;color:var(--gray);margin-top:4px">${p.visites} visite${p.visites>1?'s':''}</div>
-      <div style="margin:14px 0 6px;background:rgba(255,255,255,0.06);border-radius:99px;height:6px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:var(--gold);border-radius:99px"></div></div>
-      <div style="font-size:11px;color:var(--gray)">Encore <span style="color:var(--gold)">${Math.max(reward-p.points,0)} pts</span> pour la récompense</div>
-    </div></div>
-    <p class="section-title" style="margin-top:16px">📋 Historique des visites</p>
-    <div id="detail-history"><div class="loading"><div class="spinner"></div>Chargement...</div></div>`;
+  const detailHTML='<div class="card card-gold"><div style="text-align:center;padding:20px 0">'
+    +'<div style="font-size:28px;margin-bottom:8px">🏪</div>'
+    +'<div style="font-size:16px;font-weight:700;color:var(--white);margin-bottom:4px">'+(p.commerce_nom||p.commerce_id)+'</div>'
+    +'<div style="font-family:DM Serif Display,serif;font-size:60px;color:var(--gold);line-height:1">'+p.points+'</div>'
+    +'<div style="font-size:13px;color:var(--gray);margin-top:4px">'+p.visites+' visite'+(p.visites>1?'s':'')+'</div>'
+    +'<div style="margin:14px 0 6px;background:rgba(255,255,255,0.06);border-radius:99px;height:6px;overflow:hidden">'
+    +'<div style="height:100%;width:'+pct+'%;background:var(--gold);border-radius:99px"></div></div>'
+    +'<div style="font-size:11px;color:var(--gray)">Encore <span style="color:var(--gold)">'+Math.max(reward-p.points,0)+' pts</span> pour la récompense</div>'
+    +'</div></div>'
+    +'<p class="section-title" style="margin-top:16px">📋 Historique des visites</p>'
+    +'<div id="detail-history"><div class="loading"><div class="spinner"></div>Chargement...</div></div>';
 
-  // Charger l'historique depuis le Sheets
+  document.getElementById('detail-content').innerHTML=detailHTML;
+
   try{
     const data=await apiGet({action:'getHistorique',email:currentUser,commerce_id:p.commerce_id});
     const scans=data.scans||[];
@@ -668,17 +672,15 @@ async function renderDetail(p){
       document.getElementById('detail-history').innerHTML='<p style="color:var(--gray);font-size:13px;text-align:center;padding:16px 0">Aucun historique disponible.</p>';
       return;
     }
-    document.getElementById('detail-history').innerHTML=scans.map(s=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:6px;border:1px solid rgba(255,255,255,0.06)">
-        <div>
-          <div style="font-size:12px;font-weight:600;color:var(--white)">${s.date||'—'}</div>
-          <div style="font-size:11px;color:var(--gray);margin-top:2px">${s.palier||'Visite validée'}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold)">+${s.points||0}</div>
-          <div style="font-size:10px;color:var(--gray)">pts</div>
-        </div>
-      </div>`).join('');
+    let histHTML='';
+    scans.forEach(function(s){
+      histHTML+='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:6px;border:1px solid rgba(255,255,255,0.06)">'
+        +'<div><div style="font-size:12px;font-weight:600;color:var(--white)">'+(s.date||'—')+'</div>'
+        +'<div style="font-size:11px;color:var(--gray);margin-top:2px">'+(s.palier||'Visite validée')+'</div></div>'
+        +'<div style="text-align:right"><div style="font-family:DM Serif Display,serif;font-size:18px;color:var(--gold)">+'+(s.points||0)+'</div>'
+        +'<div style="font-size:10px;color:var(--gray)">pts</div></div></div>';
+    });
+    document.getElementById('detail-history').innerHTML=histHTML;
   }catch(e){
     document.getElementById('detail-history').innerHTML='<p style="color:var(--gray);font-size:13px;text-align:center;padding:16px 0">Impossible de charger l'historique.</p>';
   }
