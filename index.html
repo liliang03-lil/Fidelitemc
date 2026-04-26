@@ -627,7 +627,17 @@ async function renderWallet(email,data){
       <div style="font-size:10px;color:var(--gray)">pts</div></div></div>
       <div class="commerce-bar-wrap"><div class="commerce-bar" style="width:${pct}%;background:var(--gold)"></div></div>
       <div style="font-size:10px;color:var(--gray);margin-top:4px">Encore <span style="color:var(--gold)">${Math.max(reward-p.points,0)} pts</span> pour la récompense</div>
-      ${promosHtml}
+      ${promosVisibles.length?`
+      <div style="margin-top:10px">
+        ${promosVisibles.map(pr=>`
+        <div style="background:linear-gradient(135deg,rgba(46,204,138,0.12),rgba(46,204,138,0.06));border:1px solid rgba(46,204,138,0.3);border-radius:12px;padding:14px;text-align:center;margin-bottom:6px">
+          <div style="font-size:24px;margin-bottom:6px">${pr.type==='produit'?'🎁':pr.type==='remise'?'💰':pr.type==='experience'?'⭐':'🏷️'}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--success);margin-bottom:4px">Récompense disponible !</div>
+          <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:4px">${pr.titre}</div>
+          ${pr.desc?`<div style="font-size:11px;color:var(--gray);margin-bottom:8px">${pr.desc}</div>`:''}
+          <div style="font-size:11px;color:var(--gray)">Montrez ce message au commerçant pour en bénéficier 😊</div>
+        </div>`).join('')}
+      </div>`:''}
       ${promosEnCoursHtml}`;
     list.appendChild(d);
   }
@@ -1516,4 +1526,4 @@ function logout(){
 initFromURL();
 </script>
 </body>
-</html
+</html>
