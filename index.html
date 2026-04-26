@@ -1319,44 +1319,69 @@ function renderPromos(){
   :'<div style="text-align:center;color:var(--gray);font-size:13px;padding:16px 0">Aucune promotion créée.</div>';
 }
 
-function togglePromo(i){promos[i].active=!promos[i].active;savePromos();renderPromos();showNotif('Mise à jour ✓');}
-function toggleVisible(i){promos[i].visible=promos[i].visible===false?true:false;savePromos();renderPromos();showNotif('Visibilité mise à jour ✓');}
-function deletePromo(i){promos.splice(i,1);savePromos();renderPromos();showNotif('Supprimée');}
+async function togglePromo(i){
+  const p=promos[i];
+  try{await apiPost({action:'updatePromo',commerce_id:currentMerchant.commerce_id,index:i+1,active:!p.active});}catch(e){}
+  await loadPromos();renderPromos();showNotif('Mise à jour ✓');
+}
+async function toggleVisible(i){
+  const p=promos[i];
+  try{await apiPost({action:'updatePromo',commerce_id:currentMerchant.commerce_id,index:i+1,active:p.active,visible:p.visible===false?true:false});}catch(e){}
+  await loadPromos();renderPromos();showNotif('Visibilité mise à jour ✓');
+}
+async function deletePromo(i){
+  try{await apiPost({action:'updatePromo',commerce_id:currentMerchant.commerce_id,index:i+1,active:false,delete:true});}catch(e){}
+  await loadPromos();renderPromos();showNotif('Supprimée');
+}
 
-function savePromos(){
+async function savePromos(){
+  // Sauvegarde locale pour affichage immédiat
   try{localStorage.setItem('promos_'+(currentMerchant?.commerce_id||'x'),JSON.stringify(promos));}catch(e){}
 }
 
-function loadPromos(){
+async function loadPromos(){
   try{
-    const saved=localStorage.getItem('promos_'+(currentMerchant?.commerce_id||'x'));
-    if(saved){const p=JSON.parse(saved);promos.splice(0,promos.length,...p);}
-  }catch(e){}
+    const data=await apiGet({action:'getPromos',commerce_id:currentMerchant.commerce_id});
+    const p=data.promos||[];
+    promos.splice(0,promos.length,...p);
+    // Sync localStorage
+    try{localStorage.setItem('promos_'+(currentMerchant?.commerce_id||'x'),JSON.stringify(promos));}catch(e){}
+  }catch(e){
+    // Fallback localStorage
+    try{
+      const saved=localStorage.getItem('promos_'+(currentMerchant?.commerce_id||'x'));
+      if(saved){const p=JSON.parse(saved);promos.splice(0,promos.length,...p);}
+    }catch(e2){}
+  }
 }
 
-function addPromo(){
+async function addPromo(){
   const titre=document.getElementById('promo-titre').value.trim();
   if(!titre){showNotif('Ajoutez un titre',true);return;}
   const debut=document.getElementById('promo-debut').value;
   const fin=document.getElementById('promo-fin').value;
-  promos.push({
+  const promo={
+    commerce_id:currentMerchant.commerce_id,
     titre,
     desc:document.getElementById('promo-desc-inp').value.trim(),
     type:document.getElementById('promo-type').value,
     cond:document.getElementById('promo-cond').value,
     cible:document.getElementById('promo-cible').value,
-    debut:debut||null,
-    fin:fin||null,
+    debut:debut||'',
+    fin:fin||'',
     visible:document.getElementById('promo-visible').checked,
     active:true
-  });
+  };
+  try{
+    await apiPost({action:'savePromo',...promo});
+    showNotif('Promotion créée ✓');
+  }catch(e){showNotif('Erreur sauvegarde',true);}
   document.getElementById('promo-titre').value='';
   document.getElementById('promo-desc-inp').value='';
   document.getElementById('promo-debut').value='';
   document.getElementById('promo-fin').value='';
-  savePromos();
+  await loadPromos();
   renderPromos();
-  showNotif('Promotion créée ✓');
 }
 
 // EMAIL
