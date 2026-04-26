@@ -1250,7 +1250,12 @@ function renderAnalytics(){
         </div>
         <button onclick="relancerClient('${c.email}','${c.prenom}')" style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);color:var(--gold);border-radius:8px;padding:4px 10px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">Relancer</button>
       </div>`).join('')}
-      ${clientsInactifs30.length>5?`<div style="font-size:11px;color:var(--gray);text-align:center;margin-top:6px">+ ${clientsInactifs30.length-5} autres clients inactifs</div>`:''}
+      ${clientsInactifs30.length>5?`
+      <div id="inactifs-extra" style="display:none">
+        ${clientsInactifs30.slice(5).map(c=>'<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:4px"><div><div style="font-size:12px;font-weight:600;color:var(--white)">'+c.prenom+' '+c.nom+'</div><div style="font-size:10px;color:var(--gray)">'+( c.dernierScan||'Jamais')+' · '+c.points+' pts</div></div><button onclick="relancerClient(\''+c.email+'\',\''+c.prenom+'\')" style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);color:var(--gold);border-radius:8px;padding:4px 10px;font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif;font-weight:600">Relancer</button></div>').join('')}
+      </div>
+      <div style="font-size:11px;color:var(--gold);text-align:center;margin-top:6px;cursor:pointer;font-weight:600" onclick="const ex=document.getElementById('inactifs-extra');ex.style.display=ex.style.display==='none'?'block':'none';this.textContent=ex.style.display==='none'?'+ ${clientsInactifs30.length-5} autres ▼':'Réduire ▲'">+ ${clientsInactifs30.length-5} autres clients inactifs ▼</div>
+      `:''}
     </div>`:''}`;
 }
 
