@@ -1177,20 +1177,12 @@ function renderAnalytics(){
         // Grouper les clients par mois d'inscription
         const MOIS_NOMS=['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
         const moisMap={};
-        const MOIS_FR={'janvier':'01','février':'02','mars':'03','avril':'04','mai':'05','juin':'06','juillet':'07','août':'08','septembre':'09','octobre':'10','novembre':'11','décembre':'12'};
         clients.forEach(c=>{
           if(!c.dateInscription)return;
           try{
-            // Format "5 avril 2026"
-            const m=c.dateInscription.match(/(\d+)\s+(\w+)\s+(\d{4})/);
-            if(m){
-              const moisNum=MOIS_FR[m[2].toLowerCase()];
-              if(moisNum){const key=m[3]+'-'+moisNum;moisMap[key]=(moisMap[key]||0)+1;return;}
-            }
-            // Format dd/MM/yyyy
-            const parts=c.dateInscription.split('/');
-            if(parts.length===3){
-              const key=parts[2]+'-'+parts[1].padStart(2,'0');
+            const d=new Date(c.dateInscription);
+            if(!isNaN(d)){
+              const key=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0');
               moisMap[key]=(moisMap[key]||0)+1;
             }
           }catch(e){}
