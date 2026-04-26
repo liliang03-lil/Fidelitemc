@@ -1152,6 +1152,30 @@ function renderAnalytics(){
       </div>`).join('')}
     </div>
 
+    <p class="section-title">🔄 Fidélité par tranche</p>
+    <div style="margin-bottom:20px">
+      ${(()=>{
+        const tranches=[
+          {label:'1 visite',min:1,max:1,color:'#C9A96E'},
+          {label:'2-3 visites',min:2,max:3,color:'#E8903A'},
+          {label:'4-5 visites',min:4,max:5,color:'#E85555'},
+          {label:'6+ visites',min:6,max:999,color:'#9B59B6'}
+        ];
+        return tranches.map(t=>{
+          const count=clients.filter(c=>(c.visites||0)>=t.min&&(c.visites||0)<=t.max).length;
+          const pct=totalClients>0?Math.round((count/totalClients)*100):0;
+          return '<div style="margin-bottom:10px">'
+            +'<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+            +'<span style="font-size:12px">'+t.label+'</span>'
+            +'<span style="font-size:12px;color:var(--gold)">'+count+' client'+(count>1?'s':'')+' ('+pct+'%)</span>'
+            +'</div>'
+            +'<div style="background:rgba(255,255,255,0.06);border-radius:99px;height:6px;overflow:hidden">'
+            +'<div style="height:100%;width:'+pct+'%;background:'+t.color+';border-radius:99px;transition:width 1s ease"></div>'
+            +'</div></div>';
+        }).join('');
+      })()}
+    </div>
+
     <p class="section-title">📈 Répartition des achats</p>
     <div style="margin-bottom:20px">
       ${paliers.map(p=>{
