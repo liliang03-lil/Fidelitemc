@@ -288,6 +288,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <div class="field"><label>Message</label><textarea id="email-body" placeholder="Bonjour {prénom},&#10;&#10;..."></textarea></div>
       <button class="btn btn-gold" onclick="previewEmail()">Prévisualiser →</button>
     </div>
+    <div class="card" style="margin-top:14px">
+      <p class="section-title">✉️ Email automatique après visite</p>
+      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Personnalisez le message envoyé automatiquement à chaque client après validation. Variables : <span style="color:var(--gold)">{prénom}</span>, <span style="color:var(--gold)">{points}</span>, <span style="color:var(--gold)">{total}</span>, <span style="color:var(--gold)">{commerce}</span>, <span style="color:var(--gold)">{lienGoogle}</span>, <span style="color:var(--gold)">{lienSite}</span></p>
+      <div class="field">
+        <label>Message personnalisé (laisser vide pour le message par défaut)</label>
+        <textarea id="email-message-custom" placeholder="Laissez vide pour utiliser le message par défaut&#10;&#10;Ex: Bonjour {prénom}, merci pour votre visite !&#10;Vous avez gagné {points} points. Total : {total} pts." style="min-height:120px"></textarea>
+      </div>
+      <div class="field">
+        <label>Aperçu du message</label>
+        <div id="email-preview-custom" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;font-size:12px;color:var(--gray);min-height:60px;white-space:pre-wrap"></div>
+      </div>
+      <button class="btn btn-gold" style="margin-top:8px" onclick="saveEmailMessage()">Enregistrer le message</button>
+    </div>
     <div id="email-preview-panel" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(201,169,110,0.15);border-radius:14px;padding:20px;margin-top:16px">
       <p class="section-title">Aperçu</p>
       <div class="email-preview">
@@ -330,19 +343,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     <div class="card">
       <p class="section-title">Aperçu</p>
       <div id="paliers-preview" style="display:flex;flex-wrap:wrap;gap:8px;pointer-events:none"></div>
-    </div>
-    <div class="card">
-      <p class="section-title">✉️ Message email automatique</p>
-      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Personnalisez le message envoyé après chaque visite. Variables disponibles : <span style="color:var(--gold)">{prénom}</span>, <span style="color:var(--gold)">{points}</span>, <span style="color:var(--gold)">{total}</span>, <span style="color:var(--gold)">{commerce}</span></p>
-      <div class="field">
-        <label>Message personnalisé</label>
-        <textarea id="email-message-custom" placeholder="Laissez vide pour utiliser le message par défaut&#10;&#10;Ex: Bonjour {prénom}, merci pour votre visite !&#10;Vous avez gagné {points} points. Total : {total} pts." style="min-height:120px"></textarea>
-      </div>
-      <div class="field">
-        <label>Aperçu du message</label>
-        <div id="email-preview-custom" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;font-size:12px;color:var(--gray);min-height:60px;white-space:pre-wrap"></div>
-      </div>
-      <button class="btn btn-gold" style="margin-top:8px" onclick="saveEmailMessage()">Enregistrer le message</button>
     </div>
   </div>
   <button class="btn btn-outline" onclick="logout()" style="margin-top:4px">← Déconnexion</button>
@@ -402,7 +402,8 @@ function switchMNav(btn,panelId){
   if(panelId==='dash-qr') generateQR();
   if(panelId==='dash-db') loadMerchantClients().then(renderDB);
   if(panelId==='dash-analytics') loadMerchantClients().then(()=>loadScanStats().then(renderAnalytics));
-  if(panelId==='dash-settings'){renderPaliersConfig();loadEmailSettings();}
+  if(panelId==='dash-settings') renderPaliersConfig();
+  if(panelId==='dash-email') loadEmailMessageSettings();
 }
 function showNotif(msg,err=false){
   const n=document.getElementById('notif');n.textContent=msg;n.style.background=err?'var(--danger)':'var(--success)';
