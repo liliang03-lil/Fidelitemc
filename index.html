@@ -261,16 +261,46 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   <div id="dash-promos" style="display:none">
     <div id="promo-list"></div>
     <div class="card">
-      <p class="section-title">Créer une promotion</p>
+      <p class="section-title">➕ Créer une promotion</p>
       <div class="field"><label>Titre</label><input type="text" id="promo-titre" placeholder="Ex: Café offert"/></div>
       <div class="field"><label>Description</label><input type="text" id="promo-desc-inp" placeholder="Ex: Pour tout achat de 3 viennoiseries"/></div>
-      <div class="field"><label>Condition</label>
-        <select id="promo-cond">
-          <option value="50">Dès 50 points</option><option value="100">Dès 100 points</option>
-          <option value="200">Dès 200 points</option><option value="0">Tous les clients</option>
+      <div class="field"><label>Type de récompense</label>
+        <select id="promo-type">
+          <option value="produit">🎁 Produit offert</option>
+          <option value="remise">💰 Remise %</option>
+          <option value="experience">⭐ Expérience / Privilège</option>
+          <option value="autre">🏷️ Autre</option>
         </select>
       </div>
-      <button class="btn btn-gold" onclick="addPromo()">Créer</button>
+      <div class="field"><label>Condition de déclenchement</label>
+        <select id="promo-cond">
+          <option value="points_50">Dès 50 points</option>
+          <option value="points_100">Dès 100 points</option>
+          <option value="points_200">Dès 200 points</option>
+          <option value="points_500">Dès 500 points</option>
+          <option value="visites_3">Après 3 visites</option>
+          <option value="visites_5">Après 5 visites</option>
+          <option value="visites_10">Après 10 visites</option>
+          <option value="all">Tous les clients</option>
+        </select>
+      </div>
+      <div class="field"><label>Ciblage</label>
+        <select id="promo-cible">
+          <option value="all">Tous les clients</option>
+          <option value="new">Nouveaux clients (1 visite)</option>
+          <option value="fideles">Clients fidèles (3+ visites)</option>
+          <option value="vip">VIP (top 10%)</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="field"><label>Date début (optionnel)</label><input type="date" id="promo-debut"/></div>
+        <div class="field"><label>Date fin (optionnel)</label><input type="date" id="promo-fin"/></div>
+      </div>
+      <div class="rgpd" style="margin:8px 0">
+        <input type="checkbox" id="promo-visible" checked/>
+        <label for="promo-visible">Visible par les clients dans leur portefeuille</label>
+      </div>
+      <button class="btn btn-gold" onclick="addPromo()">Créer la promotion</button>
     </div>
   </div>
   <div id="dash-email" style="display:none">
@@ -400,6 +430,7 @@ function switchMNav(btn,panelId){
   ['dash-home','dash-analytics','dash-db','dash-promos','dash-email','dash-qr','dash-settings'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById(panelId).style.display='block';
   if(panelId==='dash-qr') generateQR();
+  if(panelId==='dash-promos'){loadPromos();renderPromos();}
   if(panelId==='dash-db') loadMerchantClients().then(renderDB);
   if(panelId==='dash-analytics') loadMerchantClients().then(()=>loadScanStats().then(renderAnalytics));
   if(panelId==='dash-settings') renderPaliersConfig();
@@ -564,7 +595,7 @@ async function renderMerchantDash(){
   await loadMerchantClients();
   updateStats();
   updateRecentScans();
-  renderPromos();
+  loadPromos();renderPromos();
   startPollingScans();
   document.querySelectorAll('.m-nav-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
   ['dash-home','dash-analytics','dash-db','dash-promos','dash-email','dash-qr','dash-settings'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'block':'none');
@@ -1191,26 +1222,101 @@ function renderPaliersPreview(){
 }
 
 // PROMOS
-function renderPromos(){
-  document.getElementById('promo-list').innerHTML=promos.length?promos.map((p,i)=>`
-    <div class="promo-card ${p.active?'promo-active':''}">
-      <span class="promo-badge ${p.active?'promo-badge-on':'promo-badge-off'}">${p.active?'● Active':'○ Inactive'}</span>
-      <div style="font-size:14px;font-weight:600;margin-bottom:3px">${p.titre}</div>
-      <div style="font-size:12px;color:var(--gray);margin-bottom:10px">${p.desc}${p.cond>0?' · Dès '+p.cond+' pts':''}</div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-sm ${p.active?'btn-danger':'btn-success'}" onclick="togglePromo(${i})">${p.active?'Désactiver':'Activer'}</button>
-        <button class="btn-sm btn-blue" onclick="deletePromo(${i})">Supprimer</button>
-      </div></div>`).join('')
-    :'<div style="text-align:center;color:var(--gray);font-size:13px;padding:16px 0">Aucune promotion créée.</div>';
+function getPromoIcon(type){
+  const icons={produit:'🎁',remise:'💰',experience:'⭐',autre:'🏷️'};
+  return icons[type]||'🎁';
 }
-function togglePromo(i){promos[i].active=!promos[i].active;renderPromos();showNotif('Mise à jour ✓');}
-function deletePromo(i){promos.splice(i,1);renderPromos();showNotif('Supprimée');}
+
+function getCondLabel(cond){
+  const labels={
+    points_50:'Dès 50 pts',points_100:'Dès 100 pts',points_200:'Dès 200 pts',points_500:'Dès 500 pts',
+    visites_3:'Après 3 visites',visites_5:'Après 5 visites',visites_10:'Après 10 visites',
+    all:'Tous les clients'
+  };
+  return labels[cond]||cond;
+}
+
+function getCibleLabel(cible){
+  const labels={all:'Tous',new:'Nouveaux',fideles:'Fidèles',vip:'VIP'};
+  return labels[cible]||'Tous';
+}
+
+function isPromoActive(p){
+  if(!p.active)return false;
+  const now=new Date();
+  if(p.debut&&new Date(p.debut)>now)return false;
+  if(p.fin&&new Date(p.fin)<now)return false;
+  return true;
+}
+
+function renderPromos(){
+  const now=new Date();
+  document.getElementById('promo-list').innerHTML=promos.length?promos.map((p,i)=>{
+    const active=isPromoActive(p);
+    const expire=p.fin&&new Date(p.fin)<now;
+    return `<div class="promo-card ${active?'promo-active':''}" style="${expire?'opacity:0.6':''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="promo-badge ${active?'promo-badge-on':'promo-badge-off'}">${active?'● Active':'○ Inactive'}</span>
+          ${expire?'<span style="font-size:10px;color:var(--danger);font-weight:600">Expirée</span>':''}
+          ${p.visible!==false?'<span style="font-size:10px;color:var(--success)">👁 Visible clients</span>':'<span style="font-size:10px;color:var(--gray)">🔒 Privée</span>'}
+        </div>
+        <span style="font-size:18px">${getPromoIcon(p.type)}</span>
+      </div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:3px">${p.titre}</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:6px">${p.desc||''}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        <span style="font-size:10px;background:rgba(201,169,110,0.12);color:var(--gold);padding:2px 8px;border-radius:99px;border:1px solid rgba(201,169,110,0.2)">${getCondLabel(p.cond)}</span>
+        <span style="font-size:10px;background:rgba(255,255,255,0.06);color:var(--gray);padding:2px 8px;border-radius:99px;border:1px solid rgba(255,255,255,0.08)">${getCibleLabel(p.cible)}</span>
+        ${p.debut||p.fin?`<span style="font-size:10px;background:rgba(74,142,212,0.12);color:#4A8ED4;padding:2px 8px;border-radius:99px;border:1px solid rgba(74,142,212,0.2)">${p.debut||'...'} → ${p.fin||'...'}</span>`:''}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm ${active?'btn-danger':'btn-success'}" onclick="togglePromo(${i})">${p.active?'Désactiver':'Activer'}</button>
+        <button class="btn-sm btn-blue" onclick="toggleVisible(${i})">${p.visible!==false?'Rendre privée':'Rendre visible'}</button>
+        <button class="btn-sm btn-danger" onclick="deletePromo(${i})">Supprimer</button>
+      </div></div>`;
+  }).join('')
+  :'<div style="text-align:center;color:var(--gray);font-size:13px;padding:16px 0">Aucune promotion créée.</div>';
+}
+
+function togglePromo(i){promos[i].active=!promos[i].active;savePromos();renderPromos();showNotif('Mise à jour ✓');}
+function toggleVisible(i){promos[i].visible=promos[i].visible===false?true:false;savePromos();renderPromos();showNotif('Visibilité mise à jour ✓');}
+function deletePromo(i){promos.splice(i,1);savePromos();renderPromos();showNotif('Supprimée');}
+
+function savePromos(){
+  try{localStorage.setItem('promos_'+(currentMerchant?.commerce_id||'x'),JSON.stringify(promos));}catch(e){}
+}
+
+function loadPromos(){
+  try{
+    const saved=localStorage.getItem('promos_'+(currentMerchant?.commerce_id||'x'));
+    if(saved){const p=JSON.parse(saved);promos.splice(0,promos.length,...p);}
+  }catch(e){}
+}
+
 function addPromo(){
   const titre=document.getElementById('promo-titre').value.trim();
   if(!titre){showNotif('Ajoutez un titre',true);return;}
-  promos.push({titre,desc:document.getElementById('promo-desc-inp').value.trim(),cond:parseInt(document.getElementById('promo-cond').value),active:true});
-  document.getElementById('promo-titre').value='';document.getElementById('promo-desc-inp').value='';
-  renderPromos();showNotif('Promotion créée ✓');
+  const debut=document.getElementById('promo-debut').value;
+  const fin=document.getElementById('promo-fin').value;
+  promos.push({
+    titre,
+    desc:document.getElementById('promo-desc-inp').value.trim(),
+    type:document.getElementById('promo-type').value,
+    cond:document.getElementById('promo-cond').value,
+    cible:document.getElementById('promo-cible').value,
+    debut:debut||null,
+    fin:fin||null,
+    visible:document.getElementById('promo-visible').checked,
+    active:true
+  });
+  document.getElementById('promo-titre').value='';
+  document.getElementById('promo-desc-inp').value='';
+  document.getElementById('promo-debut').value='';
+  document.getElementById('promo-fin').value='';
+  savePromos();
+  renderPromos();
+  showNotif('Promotion créée ✓');
 }
 
 // EMAIL
