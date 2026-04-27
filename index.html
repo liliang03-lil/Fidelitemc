@@ -145,6 +145,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 
 <!-- CLIENT: INSCRIPTION -->
 <div id="s-register" class="screen">
+  <div id="welcome-msg-box" style="display:none;background:linear-gradient(135deg,rgba(201,169,110,0.12),rgba(201,169,110,0.06));border:1px solid rgba(201,169,110,0.25);border-radius:14px;padding:16px;margin-bottom:16px;text-align:center">
+    <div style="font-size:24px;margin-bottom:8px">🎉</div>
+    <div id="welcome-msg-text" style="font-size:13px;color:var(--white);line-height:1.5"></div>
+  </div>
   <p class="screen-title">Créer mon compte</p>
   <p class="screen-sub">Première visite ? Quelques secondes suffisent.</p>
   <div class="card">
@@ -375,6 +379,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <div id="paliers-preview" style="display:flex;flex-wrap:wrap;gap:8px;pointer-events:none"></div>
     </div>
     <div class="card">
+      <p class="section-title">👋 Message de bienvenue</p>
+      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Affiché aux nouveaux clients lors de leur première inscription via votre QR code.</p>
+      <div class="field">
+        <label>Message (laisser vide pour ne pas afficher)</label>
+        <textarea id="bienvenue-message" placeholder="Ex: Bienvenue chez nous ! 🎉&#10;Inscrivez-vous pour cumuler des points et profiter de nos offres exclusives." style="min-height:80px"></textarea>
+      </div>
+      <button class="btn btn-gold" style="margin-top:8px" onclick="saveMessageBienvenue()">Enregistrer</button>
+    </div>
+    <div class="card">
       <p class="section-title">🔔 Message de relance clients inactifs</p>
       <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Message envoyé aux clients inactifs depuis 30+ jours. Variables : <span style="color:var(--gold)">{prénom}</span>, <span style="color:var(--gold)">{commerce}</span></p>
       <div class="field">
@@ -442,7 +455,7 @@ function switchMNav(btn,panelId){
   if(panelId==='dash-promos'){loadPromos();renderPromos();}
   if(panelId==='dash-db') loadMerchantClients().then(renderDB);
   if(panelId==='dash-analytics') loadMerchantClients().then(()=>loadScanStats().then(renderAnalytics));
-  if(panelId==='dash-settings'){renderPaliersConfig();loadRelanceMessage();}
+  if(panelId==='dash-settings'){renderPaliersConfig();loadRelanceMessage();loadMessageBienvenue();}
   if(panelId==='dash-email') loadEmailMessageSettings();
 }
 function showNotif(msg,err=false){
@@ -473,6 +486,13 @@ async function handleEmailSubmit(){
       if(!data.found){
         // Nouveau client — inscription d'abord
         showScreen('s-register');
+        // Afficher message de bienvenue si disponible
+        if(scanCommerceData&&scanCommerceData.messageBienvenue){
+          document.getElementById('welcome-msg-box').style.display='block';
+          document.getElementById('welcome-msg-text').textContent=scanCommerceData.messageBienvenue;
+        } else {
+          document.getElementById('welcome-msg-box').style.display='none';
+        }
         setLoading('btn-continue',false,'Continuer →');
         return;
       }
@@ -1358,6 +1378,22 @@ async function relancerTousInactifs(){
     });
     showNotif('✉️ '+res.envoyes+' email'+(res.envoyes>1?'s':'')+' de relance envoyé'+(res.envoyes>1?'s':''));
   }catch(e){showNotif('Erreur',true);}
+}
+
+async function saveMessageBienvenue(){
+  const msg=document.getElementById('bienvenue-message').value.trim();
+  try{
+    await apiPost({action:'saveMessageBienvenue',commerce_id:currentMerchant.commerce_id,message:msg});
+    currentMerchant.messageBienvenue=msg;
+    showNotif('Message de bienvenue enregistré ✓');
+  }catch(e){showNotif('Erreur',true);}
+}
+
+function loadMessageBienvenue(){
+  try{
+    const el=document.getElementById('bienvenue-message');
+    if(el) el.value=currentMerchant.messageBienvenue||'';
+  }catch(e){}
 }
 
 function saveRelanceMessage(){
