@@ -1530,7 +1530,16 @@ function exportCSV(){
 }
 
 // PALIERS
-function getPaliers(){try{const s=localStorage.getItem('paliers_'+(currentMerchant?.commerce_id||'x'));if(s)return JSON.parse(s);}catch(e){}return JSON.parse(JSON.stringify(PALIERS_DEFAULT));}
+function getPaliers(){
+  // Priorité : Sheets > localStorage > défaut
+  try{
+    if(currentMerchant?.paliers && currentMerchant.paliers!==''){
+      return JSON.parse(currentMerchant.paliers);
+    }
+  }catch(e){}
+  try{const s=localStorage.getItem('paliers_'+(currentMerchant?.commerce_id||'x'));if(s)return JSON.parse(s);}catch(e){}
+  return JSON.parse(JSON.stringify(PALIERS_DEFAULT));
+}
 
 function addPalier(){
   const paliers=getPaliers();
@@ -1549,7 +1558,7 @@ function deletePalier(i){
   showNotif('Palier supprimé');
 }
 
-function savePaliers(){
+async function savePaliers(){
   const paliers=getPaliers();
   const updated=paliers.map((p,i)=>{
     const emoji=document.getElementById('pc-emoji-'+i)?.value||p.emoji;
@@ -1559,13 +1568,18 @@ function savePaliers(){
     const max=parseFloat(document.getElementById('pc-max-'+i)?.value)||0;
     const pts=parseInt(document.getElementById('pc-pts-'+i)?.value)||p.pts;
     const color=document.getElementById('pc-color-'+i)?.value||p.color;
-    // Générer le label de tranche automatiquement
     let range='';
     if(type==='unique') range=min+'€';
     else if(max===0) range=min+'€ et +';
     else range=min+' – '+max+' €';
     return{...p,emoji,label,type,min,max,range,pts,color};
   });
+  // Sauvegarder dans Sheets
+  try{
+    await apiPost({action:'savePaliers',commerce_id:currentMerchant.commerce_id,paliers:updated});
+    currentMerchant.paliers=JSON.stringify(updated);
+  }catch(e){}
+  // Backup localStorage
   try{localStorage.setItem('paliers_'+currentMerchant.commerce_id,JSON.stringify(updated));}catch(e){}
   renderPaliersConfig();
   showNotif('Paliers enregistrés ✓');
