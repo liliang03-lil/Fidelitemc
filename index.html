@@ -256,6 +256,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <th onclick="sortDB('panierMoyen')">Panier moyen ↕</th>
           <th>Palier moyen</th>
           <th>Dernier scan</th>
+          <th>Action</th>
         </tr></thead>
         <tbody id="db-body"></tbody>
       </table>
@@ -1005,12 +1006,23 @@ function renderDB(){
     <td><span class="db-badge">${r.visites} visite${r.visites>1?'s':''}</span></td>
     <td style="font-weight:600;color:var(--white);font-size:13px">${r.panierMoyen>0?r.panierMoyen+'€':'—'}</td>
     <td style="font-size:12px">${r.panierMoyen>0?(getPalierFromMontant(r.panierMoyen)||'—'):'—'}</td>
-    <td style="color:var(--gray);font-size:11px;white-space:nowrap">${r.dernierScan||'—'}</td></tr>`).join('')
-    :'<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:20px;font-size:13px">Aucun client trouvé</td></tr>';
+    <td style="color:var(--gray);font-size:11px;white-space:nowrap">${r.dernierScan||'—'}</td>
+    <td>${r.points>=(currentMerchant.reward_points||500)?`<button onclick="resetClientPoints('${r.email}')" style="background:rgba(232,85,85,0.12);border:1px solid rgba(232,85,85,0.25);color:#E85555;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;white-space:nowrap">🎁 Récompense utilisée</button>`:'—'}</td></tr>`).join('')
+    :'<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:20px;font-size:13px">Aucun client trouvé</td></tr>';
   const total=rows.reduce((s,r)=>s+r.points,0);
   document.getElementById('db-count').textContent=rows.length+' client'+(rows.length>1?'s':'');
   document.getElementById('db-total-pts').textContent='Total : '+total+' pts';
 }
+async function resetClientPoints(email){
+  if(!confirm('Confirmer la réinitialisation des points de ce client ?')) return;
+  try{
+    await apiPost({action:'resetPoints',email,commerce_id:currentMerchant.commerce_id});
+    showNotif('Points remis à zéro ✓');
+    await loadMerchantClients();
+    renderDB();
+  }catch(e){showNotif('Erreur',true);}
+}
+
 function sortDB(key){if(dbSortKey===key)dbSortAsc=!dbSortAsc;else{dbSortKey=key;dbSortAsc=true;}renderDB();}
 async function loadScanStats(){
   try{
