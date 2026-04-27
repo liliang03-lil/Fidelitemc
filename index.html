@@ -789,13 +789,21 @@ async function renderDetail(p){
 // ============================================================
 // MERCHANT
 // ============================================================
+async function hashPassword(password){
+  const msgBuffer = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function handleMerchantLogin(){
   const email=document.getElementById('m-email').value.trim().toLowerCase();
   const pass=document.getElementById('m-pass').value;
   if(!email||!pass){showNotif('Remplissez tous les champs',true);return;}
   setLoading('btn-login',true);
   try{
-    const data=await apiGet({action:'getCommercant',email,password:pass});
+    const hashedPass=await hashPassword(pass);
+    const data=await apiGet({action:'getCommercant',email,password:hashedPass});
     if(data.found){currentMerchant=data;qrGenerated=false;await renderMerchantDash();}
     else showNotif('Email ou mot de passe incorrect',true);
   }catch(e){showNotif('Erreur : '+e.message,true);}
