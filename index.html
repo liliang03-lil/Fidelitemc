@@ -430,7 +430,7 @@ async function initFromURL(){
     document.getElementById('nav-tabs').style.display='none';
     scanCommerceId = commerceId;
     try{
-      const data = await apiGet({action:'getCommercant',email:'x',password:'x',commerce_id:commerceId});
+      const data = await apiGet({action:'getCommercantPublic',commerce_id:commerceId});
       if(data && data.nom){
         scanCommerceData = data;
         document.getElementById('commerce-banner').style.display='flex';
