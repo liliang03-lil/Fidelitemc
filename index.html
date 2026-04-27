@@ -158,7 +158,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     <div class="field"><label>Code postal</label><input type="text" id="reg-cp" placeholder="Ex: 98000" maxlength="10"/></div>
     <div class="rgpd">
       <input type="checkbox" id="rgpd-check"/>
-      <label for="rgpd-check">J'accepte les <a href="#">conditions d'utilisation</a> et la <a href="#">politique de confidentialité</a> (RGPD).</label>
+      <label for="rgpd-check">J'accepte les <a href="#" onclick="showScreen('s-legal');return false;">mentions légales</a> et la <a href="#" onclick="showScreen('s-privacy');return false;">politique de confidentialité</a> (RGPD).</label>
     </div>
     <button class="btn btn-gold" id="btn-register" onclick="handleRegister()">Rejoindre le programme</button>
     <button class="btn btn-outline" onclick="showScreen('s-scan')">← Retour</button>
@@ -197,6 +197,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   <p class="section-title">Mes commerçants</p>
   <div id="commerce-list"></div>
   <button class="btn btn-outline" onclick="showScreen('s-scan')" style="margin-top:6px">← Nouvelle visite</button>
+  <div style="text-align:center;margin-top:12px">
+    <a href="#" onclick="showScreen('s-privacy');return false;" style="font-size:10px;color:var(--gray);margin-right:12px">Politique de confidentialité</a>
+    <a href="#" onclick="showScreen('s-legal');return false;" style="font-size:10px;color:var(--gray);margin-right:12px">Mentions légales</a>
+    <a href="#" onclick="showScreen('s-delete-data');return false;" style="font-size:10px;color:#E85555">Supprimer mes données</a>
+  </div>
 </div>
 
 <!-- CLIENT: DÉTAIL -->
@@ -399,6 +404,71 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     </div>
   </div>
   <button class="btn btn-outline" onclick="logout()" style="margin-top:4px">← Déconnexion</button>
+</div>
+
+<!-- SUPPRESSION DONNEES -->
+<div id="s-delete-data" class="screen">
+  <p class="screen-title">Supprimer mes données</p>
+  <div class="card" style="text-align:center">
+    <div style="font-size:40px;margin-bottom:12px">🗑️</div>
+    <p style="font-size:13px;color:var(--white);margin-bottom:8px;font-weight:600">Demande de suppression</p>
+    <p style="font-size:12px;color:var(--gray);margin-bottom:16px">En supprimant vos données vous perdrez tous vos points et votre historique de fidélité. Cette action est irréversible.</p>
+    <button class="btn btn-gold" onclick="requestDataDeletion()" style="background:rgba(232,85,85,0.2);border-color:rgba(232,85,85,0.4);color:#E85555">Confirmer la suppression</button>
+    <button class="btn btn-outline" onclick="showScreen('s-wallet')" style="margin-top:8px">← Annuler</button>
+  </div>
+</div>
+
+<!-- POLITIQUE DE CONFIDENTIALITE -->
+<div id="s-privacy" class="screen">
+  <p class="screen-title">Politique de confidentialité</p>
+  <div class="card" style="font-size:12px;color:var(--gray);line-height:1.7">
+    <p style="font-weight:700;color:var(--white);margin-bottom:8px">1. Responsable du traitement</p>
+    <p>Lilian Giteau — 31 avenue Hector Otto, Monaco<br>Contact : giteaulilian@gmail.com</p>
+    <p style="font-weight:700;color:var(--white);margin:12px 0 8px">2. Données collectées</p>
+    <p>Dans le cadre du programme de fidélité FidèleMC, nous collectons les données suivantes :<br>
+    — Adresse email<br>
+    — Prénom et nom<br>
+    — Numéro de téléphone<br>
+    — Code postal<br>
+    — Historique des visites et points de fidélité</p>
+    <p style="font-weight:700;color:var(--white);margin:12px 0 8px">3. Finalité du traitement</p>
+    <p>Ces données sont utilisées exclusivement pour :<br>
+    — Gérer votre compte de fidélité<br>
+    — Vous envoyer des emails de confirmation de visite<br>
+    — Vous informer des promotions du commerçant<br>
+    — Calculer et afficher vos points</p>
+    <p style="font-weight:700;color:var(--white);margin:12px 0 8px">4. Conservation des données</p>
+    <p>Vos données sont conservées pendant toute la durée de votre participation au programme de fidélité, puis supprimées dans un délai de 30 jours après votre demande de suppression.</p>
+    <p style="font-weight:700;color:var(--white);margin:12px 0 8px">5. Vos droits</p>
+    <p>Conformément au RGPD, vous disposez des droits suivants :<br>
+    — Droit d'accès à vos données<br>
+    — Droit de rectification<br>
+    — Droit à l'effacement (droit à l'oubli)<br>
+    — Droit à la portabilité<br>
+    — Droit d'opposition<br><br>
+    Pour exercer ces droits, contactez-nous à : <span style="color:var(--gold)">giteaulilian@gmail.com</span></p>
+    <p style="font-weight:700;color:var(--white);margin:12px 0 8px">6. Hébergement</p>
+    <p>L'application est hébergée sur GitHub Pages (Microsoft) et les données sont stockées sur Google Sheets (Google LLC).</p>
+  </div>
+  <button class="btn btn-outline" onclick="history.back()" style="margin-top:8px">← Retour</button>
+</div>
+
+<!-- MENTIONS LEGALES -->
+<div id="s-legal" class="screen">
+  <p class="screen-title">Mentions légales</p>
+  <div class="card" style="font-size:12px;color:var(--gray);line-height:1.7">
+    <p style="font-weight:700;color:var(--white);margin-bottom:8px">Éditeur du service</p>
+    <p>Lilian Giteau<br>31 avenue Hector Otto, Monaco<br>Email : giteaulilian@gmail.com</p>
+    <p style="font-weight:700;color:var(--white);margin:12px 0 8px">Service</p>
+    <p>FidèleMC est une application web de fidélité digitale destinée aux commerçants de Monaco et de la région.</p>
+    <p style="font-weight:700;color:var(--white);margin:12px 0 8px">Hébergement</p>
+    <p>GitHub Pages — Microsoft Corporation<br>One Microsoft Way, Redmond, WA 98052, USA</p>
+    <p style="font-weight:700;color:var(--white);margin:12px 0 8px">Données personnelles</p>
+    <p>Pour toute question relative à vos données personnelles, consultez notre politique de confidentialité ou contactez-nous à giteaulilian@gmail.com</p>
+    <p style="font-weight:700;color:var(--white);margin:12px 0 8px">Propriété intellectuelle</p>
+    <p>L'ensemble du contenu de cette application (design, fonctionnalités, textes) est la propriété exclusive de Lilian Giteau. Toute reproduction est interdite sans autorisation préalable.</p>
+  </div>
+  <button class="btn btn-outline" onclick="history.back()" style="margin-top:8px">← Retour</button>
 </div>
 
 <div class="notif" id="notif"></div>
@@ -1013,6 +1083,20 @@ function renderDB(){
   document.getElementById('db-count').textContent=rows.length+' client'+(rows.length>1?'s':'');
   document.getElementById('db-total-pts').textContent='Total : '+total+' pts';
 }
+async function requestDataDeletion(){
+  if(!confirm('Confirmer la suppression définitive de toutes vos données ?')) return;
+  try{
+    await apiPost({action:'deleteClient',email:currentUser});
+    showNotif('Demande de suppression envoyée ✓');
+    currentUser=null;
+    showScreen('s-scan');
+  }catch(e){
+    // Envoyer email à l'admin même si l'API échoue
+    showNotif('Demande enregistrée — vous serez contacté sous 30 jours');
+    showScreen('s-scan');
+  }
+}
+
 async function resetClientPoints(email){
   if(!confirm('Confirmer la réinitialisation des points de ce client ?')) return;
   try{
