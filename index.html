@@ -480,6 +480,7 @@ const BASE_URL = 'https://liliang03-lil.github.io/Fidelitemc/';
 let currentUser=null, currentMerchant=null, selectedPalier=null;
 let merchantClients=[], dbSortKey='nom', dbSortAsc=true, qrGenerated=false;
 let scanStats={};
+let inactifsGlobal=[];
 let scanCommerceId=null, scanCommerceData=null;
 let pendingScanIndex=null, pendingScanEmail=null;
 let pollInterval=null, waitInterval=null;
@@ -1188,6 +1189,7 @@ function renderAnalytics(){
     return d<limite30;
   });
   const inactifs=clientsInactifs30.length;
+  inactifsGlobal=clientsInactifs30; // Sauvegarder pour la relance
 
   document.getElementById('analytics-content').innerHTML=`
     <p class="section-title">📅 Activité</p>
@@ -1471,16 +1473,26 @@ async function relancerClient(email, prenom){
 }
 
 async function relancerTousInactifs(){
+  if(!inactifsGlobal.length){showNotif('Aucun client inactif à relancer',true);return;}
+  if(!confirm('Envoyer un email de relance à '+inactifsGlobal.length+' client'+(inactifsGlobal.length>1?'s':'')+' inactif'+(inactifsGlobal.length>1?'s':'')+' ?')) return;
   try{
     const msgRelance=localStorage.getItem('relance_msg_'+(currentMerchant?.commerce_id||'x'))||'Bonjour {prénom},\n\nCela fait un moment que nous ne vous avons pas vu chez '+currentMerchant.nom+' !\n\nVos points vous attendent.\n\nÀ très bientôt !\nL\'équipe '+currentMerchant.nom;
-    const res=await apiPost({
-      action:'sendBulkEmail',
-      commerce_id:currentMerchant.commerce_id,
-      sujet:'Nous vous manquez ! 🌟',
-      message:msgRelance,
-      filtre:'all'
-    });
-    showNotif('✉️ '+res.envoyes+' email'+(res.envoyes>1?'s':'')+' de relance envoyé'+(res.envoyes>1?'s':''));
+    let envoyes=0;
+    for(const c of inactifsGlobal){
+      try{
+        const corps=msgRelance.replace(/{prénom}/gi,c.prenom||'').replace(/{commerce}/gi,currentMerchant.nom||'');
+        await apiPost({
+          action:'sendBulkEmail',
+          commerce_id:currentMerchant.commerce_id,
+          sujet:'Nous vous manquez ! 🌟',
+          message:corps,
+          filtre:'all',
+          emailsCibles:[c.email]
+        });
+        envoyes++;
+      }catch(e){}
+    }
+    showNotif('✉️ '+envoyes+' email'+(envoyes>1?'s':'')+' de relance envoyé'+(envoyes>1?'s':''));
   }catch(e){showNotif('Erreur',true);}
 }
 
