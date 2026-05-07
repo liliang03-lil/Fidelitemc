@@ -330,7 +330,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     </div>
     <div class="card" style="margin-top:14px">
       <p class="section-title">✉️ Email automatique après visite</p>
-      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Personnalisez le message envoyé automatiquement à chaque client après validation. Variables : <span style="color:var(--gold)">{prénom}</span>, <span style="color:var(--gold)">{points}</span>, <span style="color:var(--gold)">{total}</span>, <span style="color:var(--gold)">{commerce}</span>, <span style="color:var(--gold)">{lienGoogle}</span>, <span style="color:var(--gold)">{lienSite}</span></p>
+      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Personnalisez le message envoyé automatiquement à chaque client après validation. Variables : <span style="color:var(--gold)">{prénom}</span>, <span style="color:var(--gold)">{points}</span>, <span style="color:var(--gold)">{total}</span>, <span style="color:var(--gold)">{commerce}</span>, <span style="color:var(--gold)">{lienGoogle}</span>, <span style="color:var(--gold)">{lienSite}</span>, <span style="color:var(--gold)">{lienReseaux}</span></p>
       <div class="field">
         <label>Message personnalisé (laisser vide pour le message par défaut)</label>
         <textarea id="email-message-custom" placeholder="Laissez vide pour utiliser le message par défaut&#10;&#10;Ex: Bonjour {prénom}, merci pour votre visite !&#10;Vous avez gagné {points} points. Total : {total} pts." style="min-height:120px"></textarea>
@@ -1913,7 +1913,8 @@ function updateEmailPreview(){
     .replace(/{total}/g,'120')
     .replace(/{commerce}/g,currentMerchant?.nom||'votre commerce')
     .replace(/{lienGoogle}/g,'https://g.page/r/votre-commerce')
-    .replace(/{lienSite}/g,'https://instagram.com/votre-commerce');
+    .replace(/{lienSite}/g,'https://instagram.com/votre-commerce')
+    .replace(/{lienReseaux}/g,'https://instagram.com/votre-commerce');
 }
 
 function logout(){
