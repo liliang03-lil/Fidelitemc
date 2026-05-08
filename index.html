@@ -330,7 +330,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     </div>
     <div class="card" style="margin-top:14px">
       <p class="section-title">✉️ Email automatique après visite</p>
-      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Personnalisez le message envoyé automatiquement à chaque client après validation. Variables : <span style="color:var(--gold)">{prénom}</span>, <span style="color:var(--gold)">{points}</span>, <span style="color:var(--gold)">{total}</span>, <span style="color:var(--gold)">{commerce}</span>, <span style="color:var(--gold)">{lienGoogle}</span>, <span style="color:var(--gold)">{lienSite}</span>, <span style="color:var(--gold)">{lienReseaux}</span></p>
+      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Personnalisez le message envoyé automatiquement à chaque client après validation. Variables : <span style="color:var(--gold)">{prénom}</span>, <span style="color:var(--gold)">{points}</span>, <span style="color:var(--gold)">{total}</span>, <span style="color:var(--gold)">{commerce}</span>, <span style="color:var(--gold)">{lienGoogle}</span>, <span style="color:var(--gold)">{lienSite}</span></p>
       <div class="field">
         <label>Message personnalisé (laisser vide pour le message par défaut)</label>
         <textarea id="email-message-custom" placeholder="Laissez vide pour utiliser le message par défaut&#10;&#10;Ex: Bonjour {prénom}, merci pour votre visite !&#10;Vous avez gagné {points} points. Total : {total} pts." style="min-height:120px"></textarea>
@@ -395,7 +395,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     </div>
     <div class="card">
       <p class="section-title">🔔 Message de relance clients inactifs</p>
-      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Message envoyé aux clients inactifs depuis 30+ jours. Variables : <span style="color:var(--gold)">{prénom}</span>, <span style="color:var(--gold)">{commerce}</span></p>
+      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Message envoyé aux clients inactifs depuis 30+ jours. Variables : <span style="color:var(--gold)">{prénom}</span>, <span style="color:var(--gold)">{commerce}</span>, <span style="color:var(--gold)">{lienGoogle}</span>, <span style="color:var(--gold)">{lienSite}</span>, <span style="color:var(--gold)">{lienReseaux}</span></p>
       <div class="field">
         <label>Message personnalisé (laisser vide pour le message par défaut)</label>
         <textarea id="relance-message-custom" placeholder="Bonjour {prénom},&#10;&#10;Cela fait un moment que nous ne vous avons pas vu chez {commerce} !&#10;Vos points vous attendent — revenez nous rendre visite.&#10;&#10;À très bientôt !" style="min-height:100px"></textarea>
@@ -1530,7 +1530,12 @@ function getRelanceMessage(prenom){
   try{
     const msg=localStorage.getItem('relance_msg_'+(currentMerchant?.commerce_id||'x'))||'';
     if(msg){
-      return msg.replace(/{prénom}/gi,prenom).replace(/{commerce}/gi,currentMerchant.nom||'');
+      return msg
+        .replace(/{prénom}/gi,prenom)
+        .replace(/{commerce}/gi,currentMerchant.nom||'')
+        .replace(/{lienGoogle}/gi,currentMerchant.lienGoogle||'')
+        .replace(/{lienSite}/gi,currentMerchant.lienSite||'')
+        .replace(/{lienReseaux}/gi,currentMerchant.lienReseaux||'');
     }
   }catch(e){}
   return 'Bonjour '+prenom+',\n\nCela fait un moment que nous ne vous avons pas vu chez '+( currentMerchant?.nom||'nous')+' !\n\nVos points vous attendent — revenez nous rendre visite prochainement.\n\nÀ très bientôt !\nL\'équipe '+(currentMerchant?.nom||'');
@@ -1913,8 +1918,7 @@ function updateEmailPreview(){
     .replace(/{total}/g,'120')
     .replace(/{commerce}/g,currentMerchant?.nom||'votre commerce')
     .replace(/{lienGoogle}/g,'https://g.page/r/votre-commerce')
-    .replace(/{lienSite}/g,'https://instagram.com/votre-commerce')
-    .replace(/{lienReseaux}/g,'https://instagram.com/votre-commerce');
+    .replace(/{lienSite}/g,'https://instagram.com/votre-commerce');
 }
 
 function logout(){
