@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FidèleMC — Présentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0D1B2A;
+    --navy-mid: #162638;
+    --gold: #C9A96E;
+    --gold-light: #E8D5A3;
+    --white: #F4F0E8;
+    --gray: #8A94A0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HERO */
+  .hero {
+    padding: 60px 0 50px;
+    text-align: center;
+    position: relative;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--gold));
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .logo span { color: var(--gold); }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--gray);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 28px;
+  }
+
+  .hero-line {
+    width: 60px;
+    height: 1px;
+    background: var(--gold);
+    margin: 0 auto 28px;
+  }
+
+  .hero-desc {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--white);
+    opacity: 0.85;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border: 1px solid rgba(201,169,110,0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 40px 0;
+    background: rgba(201,169,110,0.04);
+  }
+
+  .stat-item {
+    padding: 20px 16px;
+    text-align: center;
+    border-right: 1px solid rgba(201,169,110,0.15);
+  }
+
+  .stat-item:last-child { border-right: none; }
+
+  .stat-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-lbl {
+    font-size: 10px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* SECTION TITLE */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    margin-top: 44px;
+  }
+
+  .section-header::before {
+    content: '';
+    width: 3px;
+    height: 20px;
+    background: var(--gold);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  /* PROBLEM */
+  .problem-text {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--gray);
+    padding: 20px;
+    background: var(--navy-mid);
+    border-radius: 10px;
+    border-left: 3px solid var(--gold);
+  }
+
+  .problem-text strong { color: var(--white); }
+
+  /* HOW IT WORKS */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: var(--navy-mid);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: border-color 0.2s;
+  }
+
+  .step:hover { border-color: rgba(201,169,110,0.2); }
+
+  .step-num {
+    width: 32px;
+    height: 32px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    flex-shrink: 0;
+  }
+
+  .step-content {}
+  .step-title { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 4px; }
+  .step-desc { font-size: 12px; color: var(--gray); line-height: 1.6; }
+
+  /* FEATURES */
+  .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .feature {
+    padding: 16px;
+    background: var(--navy-mid);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .feature-icon { font-size: 20px; margin-bottom: 8px; }
+  .feature-title { font-size: 12px; font-weight: 600; color: var(--gold); margin-bottom: 4px; }
+  .feature-desc { font-size: 11px; color: var(--gray); line-height: 1.5; }
+
+  /* PILOT OFFER */
+  .pilot-card {
+    background: linear-gradient(135deg, rgba(201,169,110,0.12), rgba(201,169,110,0.04));
+    border: 1px solid rgba(201,169,110,0.3);
+    border-radius: 14px;
+    padding: 28px 24px;
+    text-align: center;
+    margin-top: 44px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pilot-card::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(201,169,110,0.15), transparent 70%);
+  }
+
+  .pilot-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--navy);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 99px;
+    margin-bottom: 16px;
+  }
+
+  .pilot-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+
+  .pilot-desc {
+    font-size: 14px;
+    color: var(--gray);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .pilot-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .pilot-tag {
+    font-size: 11px;
+    color: var(--gold);
+    background: rgba(201,169,110,0.1);
+    border: 1px solid rgba(201,169,110,0.2);
+    padding: 4px 12px;
+    border-radius: 99px;
+  }
+
+  /* CTA */
+  .cta-section {
+    margin-top: 40px;
+    padding: 28px 24px;
+    background: var(--navy-mid);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.06);
+    text-align: center;
+  }
+
+  .cta-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .cta-sub {
+    font-size: 13px;
+    color: var(--gray);
+    margin-bottom: 20px;
+  }
+
+  .contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--white);
+  }
+
+  .contact-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 50px;
+    text-align: center;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  .footer-sub {
+    font-size: 11px;
+    color: var(--gray);
+    letter-spacing: 0.08em;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero { animation: fadeUp 0.6s ease forwards; }
+  .stats-bar { animation: fadeUp 0.6s 0.1s ease both; }
+
+  @media (max-width: 480px) {
+    .logo { font-size: 42px; }
+    .features { grid-template-columns: 1fr; }
+    .stat-val { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="logo">Fidèle<span>MC</span></div>
+    <div class="tagline">La fidélité digitale · Monaco</div>
+    <div class="hero-line"></div>
+    <p class="hero-desc">
+      Transformez chaque visite en relation client durable.<br>
+      Simple à installer, puissant à utiliser.
+    </p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-val">30s</div>
+      <div class="stat-lbl">Inscription client</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">0€</div>
+      <div class="stat-lbl">Installation</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">100%</div>
+      <div class="stat-lbl">Automatique</div>
+    </div>
+  </div>
+
+  <!-- PROBLÈME -->
+  <div class="section-header">
+    <div class="section-title">Le problème</div>
+  </div>
+  <div class="problem-text">
+    Les cartes papier sont <strong>perdues, oubliées, inexploitables</strong>. Les solutions existantes sont trop complexes et trop chères pour un commerçant indépendant. Résultat : <strong>moins de 5% des commerces de Monaco</strong> utilisent un vrai outil de fidélité digital — alors que leurs clients reviennent chaque semaine.
+  </div>
+
+  <!-- COMMENT ÇA MARCHE -->
+  <div class="section-header">
+    <div class="section-title">Comment ça marche</div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Un QR code sur votre comptoir</div>
+        <div class="step-desc">Pas d'app à télécharger. Le client scanne avec son téléphone et entre son email. C'est tout.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Vous validez la visite en 1 clic</div>
+        <div class="step-desc">Depuis votre dashboard sur téléphone ou ordinateur. Vous choisissez le palier d'achat et validez.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Le client reçoit un email automatique</div>
+        <div class="step-desc">Ses points, son total, votre lien Google avis et votre Instagram. Sans que vous fassiez quoi que ce soit.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Vous suivez tout en temps réel</div>
+        <div class="step-desc">Qui sont vos meilleurs clients, qui n'est plus revenu depuis 30 jours, combien de scans aujourd'hui.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FONCTIONNALITÉS -->
+  <div class="section-header">
+    <div class="section-title">Ce que vous obtenez</div>
+  </div>
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">📊</div>
+      <div class="feature-title">Dashboard complet</div>
+      <div class="feature-desc">CA estimé, taux de fidélité, top clients, évolution mensuelle.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">✉️</div>
+      <div class="feature-title">Emails automatiques</div>
+      <div class="feature-desc">Message personnalisé après chaque visite. Lien avis Google inclus.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🎁</div>
+      <div class="feature-title">Promotions sur mesure</div>
+      <div class="feature-desc">Créez vos propres récompenses — café offert, remise, accès VIP.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔔</div>
+      <div class="feature-title">Alertes clients inactifs</div>
+      <div class="feature-desc">Relancez d'un clic les clients qui ne sont plus venus depuis 30 jours.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📍</div>
+      <div class="feature-title">Connaissance client</div>
+      <div class="feature-desc">Nom, email, provenance, historique complet de chaque visite.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔒</div>
+      <div class="feature-title">RGPD conforme</div>
+      <div class="feature-desc">Consentement, politique de confidentialité, droit à l'oubli intégrés.</div>
+    </div>
+  </div>
+
+  <!-- OFFRE PILOTE -->
+  <div class="pilot-card">
+    <div class="pilot-badge">Offre pilote</div>
+    <div class="pilot-title">3 mois gratuits<br>sans engagement</div>
+    <p class="pilot-desc">
+      Je cherche 2 à 3 commerçants de Monaco pour tester l'application en conditions réelles. Accès complet, support direct, zéro frais.
+    </p>
+    <div class="pilot-features">
+      <span class="pilot-tag">✓ Installation en 5 minutes</span>
+      <span class="pilot-tag">✓ Support WhatsApp direct</span>
+      <span class="pilot-tag">✓ Aucun engagement</span>
+      <span class="pilot-tag">✓ Vos retours améliorent l'app</span>
+    </div>
+  </div>
+
+  <!-- CONTACT -->
+  <div class="cta-section">
+    <div class="cta-title">Intéressé ? Parlons-en.</div>
+    <div class="cta-sub">Une démo de 5 minutes suffit pour tout comprendre.</div>
+    <div class="contact-info">
+      <div class="contact-item">
+        <div class="contact-dot"></div>
+        Lilian Giteau — Monaco
+      </div>
+      <div class="contact-item">
+        <div class="contact-dot"></div>
+        giteaulilian@gmail.com
+      </div>
+      <div class="contact-item">
+        <div class="contact-dot"></div>
+        <a href="https://liliang03-lil.github.io/Fidelitemc/" style="color:var(--gold);text-decoration:none;">Voir la démo en ligne →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-logo">FidèleMC</div>
+    <div class="footer-sub">La fidélité digitale made in Monaco · 2025</div>
+  </div>
+
+</div>
+
+</body>
+</html>
