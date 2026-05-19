@@ -498,6 +498,7 @@ let currentUser=null, currentMerchant=null, selectedPalier=null;
 let merchantClients=[], dbSortKey='nom', dbSortAsc=true, qrGenerated=false;
 let scanStats={};
 let inactifsGlobal=[];
+let logoCache={};
 let scanCommerceId=null, scanCommerceData=null;
 let pendingScanIndex=null, pendingScanEmail=null;
 let pollInterval=null, waitInterval=null;
@@ -526,6 +527,13 @@ async function initFromURL(){
         document.getElementById('banner-name').textContent = data.nom;
         document.getElementById('banner-type').textContent = data.type||'';
         document.getElementById('scan-sub').textContent = 'Entrez votre email pour gagner des points chez '+data.nom+' !';
+        // Afficher le logo si disponible
+        const bannerIcon = document.getElementById('banner-icon');
+        if(data.logo){
+          bannerIcon.innerHTML='<img src="'+data.logo+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover;" onerror="this.parentElement.textContent='🏪'"/>';
+        } else {
+          bannerIcon.textContent='🏪';
+        }
       }
     }catch(e){}
   }
@@ -662,6 +670,13 @@ async function renderWallet(email,data){
       const pd=await apiGet({action:'getPromos',commerce_id:p.commerce_id});
       promoCache[p.commerce_id]=pd.promos||[];
     }catch(e){promoCache[p.commerce_id]=[];}
+    // Charger aussi le logo
+    try{
+      if(!logoCache[p.commerce_id]){
+        const cd=await apiGet({action:'getCommercantPublic',commerce_id:p.commerce_id});
+        logoCache[p.commerce_id]=cd.logo||'';
+      }
+    }catch(e){logoCache[p.commerce_id]='';}
   }
 
   for(const p of programmes){
@@ -742,7 +757,7 @@ async function renderWallet(email,data){
     const d=document.createElement('div');d.className='commerce-card';d.onclick=()=>renderDetail(p).catch(e=>console.error(e));
     d.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between">
       <div style="display:flex;align-items:center">
-        <div style="width:38px;height:38px;border-radius:10px;background:rgba(201,169,110,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;margin-right:10px">🏪</div>
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(201,169,110,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;margin-right:10px;overflow:hidden">${logoCache[p.commerce_id]?'<img src="'+logoCache[p.commerce_id]+'" style="width:38px;height:38px;object-fit:cover;" onerror="this.parentElement.innerHTML='🏪'"/>':'🏪'}</div>
         <div><div style="font-size:14px;font-weight:600;color:var(--white)">${p.commerce_nom||p.commerce_id}</div>
         <div style="font-size:11px;color:var(--gray)">${p.visites} visite${p.visites>1?'s':''}</div></div></div>
       <div style="text-align:right"><div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold)">${p.points}</div>
