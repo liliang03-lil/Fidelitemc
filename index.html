@@ -530,7 +530,12 @@ async function initFromURL(){
         // Afficher le logo si disponible
         const bannerIcon = document.getElementById('banner-icon');
         if(data.logo){
-          bannerIcon.innerHTML='<img src="'+data.logo+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover;" onerror="this.parentElement.textContent='🏪'"/>';
+          const img=document.createElement('img');
+          img.src=data.logo;
+          img.style.cssText='width:40px;height:40px;border-radius:8px;object-fit:cover';
+          img.onerror=function(){bannerIcon.textContent='🏪';};
+          bannerIcon.innerHTML='';
+          bannerIcon.appendChild(img);
         } else {
           bannerIcon.textContent='🏪';
         }
