@@ -385,6 +385,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <div id="paliers-preview" style="display:flex;flex-wrap:wrap;gap:8px;pointer-events:none"></div>
     </div>
     <div class="card">
+      <p class="section-title">🏪 Mon commerce</p>
+      <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Modifiez les informations de votre commerce directement depuis l'app.</p>
+      <div class="field"><label>Nom du commerce</label><input type="text" id="param-nom" placeholder="Ex: Boulangerie du Port"/></div>
+      <div class="field"><label>Type</label><input type="text" id="param-type" placeholder="Ex: Boulangerie . Monaco"/></div>
+      <div class="field"><label>Logo (URL image)</label><input type="url" id="param-logo" placeholder="https://monsite.com/logo.png"/></div>
+      <div class="field"><label>Lien Google avis</label><input type="url" id="param-google" placeholder="https://g.page/r/..."/></div>
+      <div class="field"><label>Lien site web</label><input type="url" id="param-site" placeholder="https://monsite.com"/></div>
+      <div class="field"><label>Lien réseaux sociaux</label><input type="url" id="param-reseaux" placeholder="https://instagram.com/moncommerce"/></div>
+      <button class="btn btn-gold" style="margin-top:8px" onclick="saveInfosCommerce()">Enregistrer</button>
+    </div>
+    <div class="card">
+      <p class="section-title">🔑 Changer mon mot de passe</p>
+      <div class="field"><label>Nouveau mot de passe</label><input type="password" id="param-newpass" placeholder="Nouveau mot de passe"/></div>
+      <div class="field"><label>Confirmer le mot de passe</label><input type="password" id="param-confirmpass" placeholder="Confirmer le mot de passe"/></div>
+      <button class="btn btn-gold" style="margin-top:8px" onclick="saveNewPassword()">Changer le mot de passe</button>
+    </div>
+    <div class="card">
       <p class="section-title">👋 Message de bienvenue</p>
       <p style="font-size:11px;color:var(--gray);margin-bottom:12px">Affiché aux nouveaux clients lors de leur première inscription via votre QR code.</p>
       <div class="field">
@@ -527,7 +544,7 @@ function switchMNav(btn,panelId){
   if(panelId==='dash-promos'){loadPromos();renderPromos();}
   if(panelId==='dash-db') loadMerchantClients().then(renderDB);
   if(panelId==='dash-analytics') loadMerchantClients().then(()=>loadScanStats().then(renderAnalytics));
-  if(panelId==='dash-settings'){renderPaliersConfig();loadRelanceMessage();loadMessageBienvenue();}
+  if(panelId==='dash-settings'){renderPaliersConfig();loadRelanceMessage();loadMessageBienvenue();loadInfosCommerce();}
   if(panelId==='dash-email') loadEmailMessageSettings();
 }
 function showNotif(msg,err=false){
@@ -1510,6 +1527,54 @@ function loadMessageBienvenue(){
     const el=document.getElementById('bienvenue-message');
     if(el) el.value=currentMerchant.messageBienvenue||'';
   }catch(e){}
+}
+
+function loadInfosCommerce(){
+  try{
+    document.getElementById('param-nom').value=currentMerchant.nom||'';
+    document.getElementById('param-type').value=currentMerchant.type||'';
+    document.getElementById('param-logo').value=currentMerchant.logo||'';
+    document.getElementById('param-google').value=currentMerchant.lienGoogle||'';
+    document.getElementById('param-site').value=currentMerchant.lienSite||'';
+    document.getElementById('param-reseaux').value=currentMerchant.lienReseaux||'';
+  }catch(e){}
+}
+
+async function saveInfosCommerce(){
+  const nom=document.getElementById('param-nom').value.trim();
+  const type=document.getElementById('param-type').value.trim();
+  const logo=document.getElementById('param-logo').value.trim();
+  const lienGoogle=document.getElementById('param-google').value.trim();
+  const lienSite=document.getElementById('param-site').value.trim();
+  const lienReseaux=document.getElementById('param-reseaux').value.trim();
+  if(!nom){showNotif('Le nom est obligatoire',true);return;}
+  try{
+    await apiPost({action:'saveInfosCommerce',commerce_id:currentMerchant.commerce_id,nom,type,logo,lienGoogle,lienSite,lienReseaux});
+    currentMerchant.nom=nom;
+    currentMerchant.type=type;
+    currentMerchant.logo=logo;
+    currentMerchant.lienGoogle=lienGoogle;
+    currentMerchant.lienSite=lienSite;
+    currentMerchant.lienReseaux=lienReseaux;
+    document.getElementById('dash-title').textContent='🏪 '+nom;
+    document.getElementById('dash-sub').textContent=type;
+    showNotif('Informations mises à jour ✓');
+  }catch(e){showNotif('Erreur',true);}
+}
+
+async function saveNewPassword(){
+  const newpass=document.getElementById('param-newpass').value;
+  const confirmpass=document.getElementById('param-confirmpass').value;
+  if(!newpass){showNotif('Entrez un nouveau mot de passe',true);return;}
+  if(newpass!==confirmpass){showNotif('Les mots de passe ne correspondent pas',true);return;}
+  if(newpass.length<6){showNotif('Mot de passe trop court (6 caractères min)',true);return;}
+  try{
+    const hashedPass=await hashPassword(newpass);
+    await apiPost({action:'saveNewPassword',commerce_id:currentMerchant.commerce_id,password:hashedPass});
+    document.getElementById('param-newpass').value='';
+    document.getElementById('param-confirmpass').value='';
+    showNotif('Mot de passe modifié ✓');
+  }catch(e){showNotif('Erreur',true);}
 }
 
 function saveRelanceMessage(){
